@@ -24,8 +24,7 @@ import {
   List,
   CheckSquare
 } from 'lucide-react';
-import { modules } from '../data/mockData';
-
+import { getAssessments, getModules } from '../lib/api';
 interface Question {
   id: string;
   type: 'multiple-choice' | 'single-choice' | 'true-false' | 'short-answer' | 'essay';
@@ -59,114 +58,34 @@ interface Assessment {
   isActive: boolean;
 }
 
-const mockAssessments: Assessment[] = [
-  {
-    id: '1',
-    title: 'Import Management Fundamentals Quiz',
-    module: 'Import Management',
-    moduleId: '1',
-    sectionId: '1-1',
-    description: 'Test your knowledge of import processes, documentation, and basic procedures',
-    questions: [
-      {
-        id: 'q1',
-        type: 'multiple-choice',
-        question: 'What is the primary purpose of a Bill of Lading?',
-        options: ['Calculate duties', 'Receipt and contract', 'Quality check', 'Set price'],
-        correctAnswer: 'Receipt and contract',
-        explanation: 'A Bill of Lading serves as a receipt for goods shipped and a contract between shipper and carrier.',
-        points: 5
-      },
-      {
-        id: 'q2',
-        type: 'true-false',
-        question: 'All imported goods must go through customs inspection.',
-        correctAnswer: 'false',
-        explanation: 'Not all goods require physical inspection. Many are cleared through automated systems.',
-        points: 3
-      }
-    ],
-    totalQuestions: 15,
-    totalPoints: 100,
-    timeLimit: 30,
-    passingScore: 80,
-    attempts: 2,
-    maxAttempts: 3,
-    lastScore: 85,
-    bestScore: 85,
-    status: 'completed',
-    lastAttempt: '2 days ago',
-    isRequired: true,
-    triggerType: 'section-completion',
-    isActive: true
-  },
-  {
-    id: '2',
-    title: 'Documentation & Compliance Assessment',
-    module: 'Import Management',
-    moduleId: '1',
-    sectionId: '1-2',
-    description: 'Advanced assessment covering customs documentation and compliance requirements',
-    questions: [],
-    totalQuestions: 20,
-    totalPoints: 150,
-    timeLimit: 45,
-    passingScore: 75,
-    attempts: 1,
-    maxAttempts: 3,
-    lastScore: 65,
-    bestScore: 65,
-    status: 'failed',
-    lastAttempt: '1 week ago',
-    isRequired: true,
-    triggerType: 'section-completion',
-    isActive: true
-  },
-  {
-    id: '3',
-    title: 'Export Operations Final Exam',
-    module: 'Export Operations',
-    moduleId: '2',
-    description: 'Comprehensive exam covering all export procedures and international regulations',
-    questions: [],
-    totalQuestions: 25,
-    totalPoints: 200,
-    timeLimit: 60,
-    passingScore: 80,
-    attempts: 0,
-    maxAttempts: 2,
-    status: 'not-started',
-    isRequired: false,
-    triggerType: 'module-completion',
-    isActive: true
-  },
-  {
-    id: '4',
-    title: 'Freight Management Quiz',
-    module: 'Freight Management',
-    moduleId: '3',
-    description: 'Assessment on freight booking, tracking, and cost optimization',
-    questions: [],
-    totalQuestions: 12,
-    totalPoints: 80,
-    timeLimit: 25,
-    passingScore: 70,
-    attempts: 0,
-    maxAttempts: 3,
-    status: 'not-started',
-    isRequired: false,
-    triggerType: 'section-completion',
-    isActive: true
-  }
-];
-
 const Assessments: React.FC = () => {
   const [filter, setFilter] = useState('all');
   const [selectedModule, setSelectedModule] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAssessment, setEditingAssessment] = useState<string | null>(null);
   const [showQuestionBuilder, setShowQuestionBuilder] = useState<string | null>(null);
-  const [assessments, setAssessments] = useState<Assessment[]>(mockAssessments);
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [modules, setModules] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      getAssessments(),
+      getModules()
+    ])
+      .then(([assessmentsData, modulesData]) => {
+        setAssessments(assessmentsData);
+        setModules(modulesData);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError('Failed to load assessments or modules');
+        setLoading(false);
+      });
+  }, []);
+
   const [newAssessment, setNewAssessment] = useState({
     title: '',
     moduleId: '',
@@ -192,10 +111,10 @@ const Assessments: React.FC = () => {
     points: 5
   });
 
-  const [editingQuestion, setEditingQuestion] = useState<string | null>(null);
+
 
   const filteredAssessments = assessments.filter(assessment => {
-    const statusMatch = filter === 'all' || assessment.status === filter;
+    const statusMatch = filter === 'all' || (assessment.status || 'not-started') === filter;
     const moduleMatch = !selectedModule || assessment.moduleId === selectedModule;
     return statusMatch && moduleMatch;
   });
@@ -219,7 +138,9 @@ const Assessments: React.FC = () => {
   };
 
   const getActionButton = (assessment: Assessment) => {
-    if (assessment.status === 'completed') {
+    const status = assessment.status || 'not-started';
+    
+    if (status === 'completed') {
       return (
         <Link to={`/assessments/${assessment.id}/review`} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
           <Trophy className="h-4 w-4 mr-2" />
@@ -228,7 +149,7 @@ const Assessments: React.FC = () => {
       );
     }
 
-    if (assessment.status === 'failed' && assessment.attempts < assessment.maxAttempts) {
+    if (status === 'failed' && assessment.attempts < assessment.maxAttempts) {
       return (
         <Link to={`/assessments/${assessment.id}/take`} className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
           <RotateCcw className="h-4 w-4 mr-2" />
@@ -237,7 +158,7 @@ const Assessments: React.FC = () => {
       );
     }
 
-    if (assessment.status === 'failed' && assessment.attempts >= assessment.maxAttempts) {
+    if (status === 'failed' && assessment.attempts >= assessment.maxAttempts) {
       return (
         <button disabled className="flex items-center px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">
           <XCircle className="h-4 w-4 mr-2" />
@@ -255,10 +176,10 @@ const Assessments: React.FC = () => {
   };
 
   const stats = {
-    total: mockAssessments.length,
-    completed: mockAssessments.filter(a => a.status === 'completed').length,
-    failed: mockAssessments.filter(a => a.status === 'failed').length,
-    notStarted: mockAssessments.filter(a => a.status === 'not-started').length
+    total: assessments.length,
+    completed: assessments.filter(a => a.status === 'completed').length,
+    failed: assessments.filter(a => a.status === 'failed').length,
+    notStarted: assessments.filter(a => a.status === 'not-started').length
   };
 
   const handleAddAssessment = () => {
@@ -381,17 +302,7 @@ const Assessments: React.FC = () => {
     }
   };
 
-  const handleUpdateQuestion = (assessmentId: string, questionId: string, updatedQuestion: Question) => {
-    setAssessments(prev => prev.map(assessment => 
-      assessment.id === assessmentId
-        ? { 
-            ...assessment, 
-            questions: assessment.questions.map(q => q.id === questionId ? updatedQuestion : q)
-          }
-        : assessment
-    ));
-    setEditingQuestion(null);
-  };
+
 
   const handleDeleteAssessment = (assessmentId: string) => {
     if (confirm('Are you sure you want to delete this assessment? This action cannot be undone.')) {
@@ -408,14 +319,12 @@ const Assessments: React.FC = () => {
     ));
   };
 
-  const getModuleTitle = (moduleId: string) => {
-    return modules.find(m => m.id === moduleId)?.title || 'Unknown Module';
-  };
+
 
   const getSectionTitle = (moduleId: string, sectionId?: string) => {
     if (!sectionId) return null;
-    const module = modules.find(m => m.id === moduleId);
-    return module?.sections?.find(s => s.id === sectionId)?.title || 'Unknown Section';
+    const module = modules.find((m: any) => m.id === moduleId);
+    return module?.sections?.find((s: { id: string; title: string }) => s.id === sectionId)?.title || 'Unknown Section';
   };
 
   const validateForm = () => {
@@ -480,16 +389,7 @@ const Assessments: React.FC = () => {
     }
   };
 
-  const getQuestionTypeLabel = (type: string) => {
-    switch (type) {
-      case 'multiple-choice': return 'Multiple Choice';
-      case 'single-choice': return 'Single Choice';
-      case 'true-false': return 'True/False';
-      case 'short-answer': return 'Short Answer';
-      case 'essay': return 'Essay';
-      default: return type;
-    }
-  };
+
 
   // Auto-populate section dropdown when module changes
   React.useEffect(() => {
@@ -600,10 +500,10 @@ const Assessments: React.FC = () => {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    {getStatusIcon(assessment.status)}
+                    {getStatusIcon(assessment.status || 'not-started')}
                     <h3 className="text-lg font-semibold text-gray-900">{assessment.title}</h3>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(assessment.status)}`}>
-                      {assessment.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(assessment.status || 'not-started')}`}>
+                      {(assessment.status || 'not-started').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </span>
                     {assessment.isRequired && (
                       <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
@@ -1026,7 +926,7 @@ const Assessments: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select a section</option>
-                    {modules.find(m => m.id === newAssessment.moduleId)?.sections?.map(section => (
+                    {modules.find(m => m.id === newAssessment.moduleId)?.sections?.map((section: { id: string; title: string }) => (
                       <option key={section.id} value={section.id}>{section.title}</option>
                     ))}
                   </select>

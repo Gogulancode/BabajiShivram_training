@@ -16,14 +16,20 @@ public class MappingProfile : Profile
         // Module mappings
         CreateMap<Module, ModuleDto>()
             .ForMember(dest => dest.Progress, opt => opt.Ignore())
-            .ForMember(dest => dest.IsLocked, opt => opt.Ignore());
-        CreateMap<CreateModuleDto, Module>();
-        CreateMap<UpdateModuleDto, Module>();
+            .ForMember(dest => dest.IsLocked, opt => opt.Ignore())
+            .ForMember(dest => dest.ErpModuleId, opt => opt.MapFrom(src => src.ErpModuleId));
+        CreateMap<CreateModuleDto, Module>()
+            .ForMember(dest => dest.ErpModuleId, opt => opt.MapFrom(src => src.ErpModuleId));
+        CreateMap<UpdateModuleDto, Module>()
+            .ForMember(dest => dest.ErpModuleId, opt => opt.MapFrom(src => src.ErpModuleId));
 
         // Section mappings
-        CreateMap<Section, SectionDto>();
-        CreateMap<CreateSectionDto, Section>();
-        CreateMap<UpdateSectionDto, Section>();
+        CreateMap<Section, SectionDto>()
+            .ForMember(dest => dest.ErpSectionId, opt => opt.MapFrom(src => src.ErpSectionId));
+        CreateMap<CreateSectionDto, Section>()
+            .ForMember(dest => dest.ErpSectionId, opt => opt.MapFrom(src => src.ErpSectionId));
+        CreateMap<UpdateSectionDto, Section>()
+            .ForMember(dest => dest.ErpSectionId, opt => opt.MapFrom(src => src.ErpSectionId));
 
         // Lesson mappings
         CreateMap<Lesson, LessonDto>()

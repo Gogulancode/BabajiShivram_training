@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, Plus, Edit, Trash2, Save, X, ChevronDown, ChevronRight, BookOpen, FileText, Users, Shield } from 'lucide-react';
+import { createModule, getModules, updateModule } from '../lib/api';
+import { Settings as SettingsIcon, Plus, Edit, Trash2, Save, ChevronDown, ChevronRight, BookOpen, FileText, Shield } from 'lucide-react';
 
 interface Module {
   id: string;
@@ -9,6 +11,7 @@ interface Module {
   category: string;
   isActive: boolean;
   sections: Section[];
+  erpModuleId?: string; // ERP Module ID
 }
 
 interface Section {
@@ -19,6 +22,7 @@ interface Section {
   order: number;
   isActive: boolean;
   lessons: Lesson[];
+  erpSectionId?: string; // ERP Section ID
 }
 
 interface Lesson {
@@ -42,91 +46,21 @@ const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'modules' | 'sections' | 'lessons'>('modules');
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
-  const [editingItem, setEditingItem] = useState<string | null>(null);
+
   const [showAddForm, setShowAddForm] = useState<string | null>(null);
 
-  // Mock data - in real app this would come from API
-  const [modules, setModules] = useState<Module[]>([
-    {
-      id: '1',
-      title: 'Import Management',
-      description: 'Learn to handle import processes, documentation, and compliance',
-      icon: 'ArrowDownToLine',
-      category: 'Trade',
-      isActive: true,
-      sections: [
-        {
-          id: '1-1',
-          title: 'Import Fundamentals',
-          description: 'Basic concepts and overview of import processes',
-          moduleId: '1',
-          order: 1,
-          isActive: true,
-          lessons: [
-            {
-              id: '1-1-1',
-              title: 'Introduction to Import Management',
-              description: 'Overview of import processes and key stakeholders',
-              type: 'video',
-              duration: '15 min',
-              sectionId: '1-1',
-              order: 1,
-              isActive: true,
-              content: { videoUrl: 'https://www.youtube.com/embed/example' }
-            },
-            {
-              id: '1-1-2',
-              title: 'Import Terminology',
-              description: 'Key terms and definitions in import management',
-              type: 'document',
-              duration: '10 min',
-              sectionId: '1-1',
-              order: 2,
-              isActive: true,
-              content: { documentContent: '<h3>Import Terminology</h3><p>Key terms...</p>' }
-            }
-          ]
-        },
-        {
-          id: '1-2',
-          title: 'Documentation & Compliance',
-          description: 'Required documents and compliance procedures',
-          moduleId: '1',
-          order: 2,
-          isActive: true,
-          lessons: [
-            {
-              id: '1-2-1',
-              title: 'Import Documentation Requirements',
-              description: 'Essential documents for import operations',
-              type: 'document',
-              duration: '20 min',
-              sectionId: '1-2',
-              order: 1,
-              isActive: true,
-              content: { documentContent: '<h3>Documentation</h3><p>Required docs...</p>' }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: '2',
-      title: 'Export Operations',
-      description: 'Master export procedures and international regulations',
-      icon: 'ArrowUpFromLine',
-      category: 'Trade',
-      isActive: true,
-      sections: []
-    }
-  ]);
+
+  const [modules, setModules] = useState<Module[]>([]);
+
+
 
   const [newModule, setNewModule] = useState({
     title: '',
     description: '',
     icon: 'BookOpen',
     category: '',
-    isActive: true
+    isActive: true,
+    erpModuleId: ''
   });
 
   const [newSection, setNewSection] = useState({
@@ -134,20 +68,11 @@ const Settings: React.FC = () => {
     description: '',
     moduleId: '',
     order: 1,
-    isActive: true
+    isActive: true,
+    erpSectionId: ''
   });
 
-  const [newLesson, setNewLesson] = useState({
-    title: '',
-    description: '',
-    type: 'video' as 'video' | 'document' | 'interactive' | 'quiz',
-    duration: '',
-    sectionId: '',
-    order: 1,
-    isActive: true,
-    videoUrl: '',
-    documentContent: ''
-  });
+
 
   const toggleModuleExpansion = (moduleId: string) => {
     setExpandedModules(prev => 
@@ -165,76 +90,53 @@ const Settings: React.FC = () => {
     );
   };
 
-  const handleAddModule = () => {
+  const handleAddModule = async () => {
     if (newModule.title && newModule.description) {
-      const module: Module = {
-        id: Date.now().toString(),
-        ...newModule,
-        sections: []
-      };
-      setModules(prev => [...prev, module]);
-      setNewModule({ title: '', description: '', icon: 'BookOpen', category: '', isActive: true });
-      setShowAddForm(null);
+      try {
+        await createModule({ ...newModule });
+        // Optionally, fetch all modules again for fresh state
+        const allModules = await getModules();
+        setModules(allModules);
+        setNewModule({ title: '', description: '', icon: 'BookOpen', category: '', isActive: true, erpModuleId: '' });
+        setShowAddForm(null);
+      } catch (err) {
+        alert('Failed to save module. Please try again.');
+      }
     }
   };
 
-  const handleAddSection = () => {
+  const handleAddSection = async () => {
     if (newSection.title && newSection.description && newSection.moduleId) {
-      const section: Section = {
-        id: Date.now().toString(),
-        ...newSection,
-        lessons: []
-      };
-      setModules(prev => prev.map(module => 
-        module.id === newSection.moduleId 
-          ? { ...module, sections: [...module.sections, section] }
-          : module
-      ));
-      setNewSection({ title: '', description: '', moduleId: '', order: 1, isActive: true });
-      setShowAddForm(null);
+      try {
+        // Find the parent module
+        const parentModule = modules.find(m => m.id === newSection.moduleId);
+        if (!parentModule) return;
+        // Prepare new section
+        const section: Section = {
+          id: Date.now().toString(),
+          ...newSection,
+          lessons: []
+        };
+        // Option 1: If you have a createSection API, use it here
+        // await createSection(section);
+        // Option 2: Patch the module with new section (if no section API)
+        const updatedModule = {
+          ...parentModule,
+          sections: [...parentModule.sections, section]
+        };
+        await updateModule(parentModule.id, updatedModule);
+        // Refresh modules
+        const allModules = await getModules();
+        setModules(allModules);
+        setNewSection({ title: '', description: '', moduleId: '', order: 1, isActive: true, erpSectionId: '' });
+        setShowAddForm(null);
+      } catch (err) {
+        alert('Failed to save section. Please try again.');
+      }
     }
   };
 
-  const handleAddLesson = () => {
-    if (newLesson.title && newLesson.description && newLesson.sectionId) {
-      const lesson: Lesson = {
-        id: Date.now().toString(),
-        title: newLesson.title,
-        description: newLesson.description,
-        type: newLesson.type,
-        duration: newLesson.duration,
-        sectionId: newLesson.sectionId,
-        order: newLesson.order,
-        isActive: newLesson.isActive,
-        content: {
-          videoUrl: newLesson.videoUrl || undefined,
-          documentContent: newLesson.documentContent || undefined
-        }
-      };
 
-      setModules(prev => prev.map(module => ({
-        ...module,
-        sections: module.sections.map(section => 
-          section.id === newLesson.sectionId
-            ? { ...section, lessons: [...section.lessons, lesson] }
-            : section
-        )
-      })));
-
-      setNewLesson({
-        title: '',
-        description: '',
-        type: 'video',
-        duration: '',
-        sectionId: '',
-        order: 1,
-        isActive: true,
-        videoUrl: '',
-        documentContent: ''
-      });
-      setShowAddForm(null);
-    }
-  };
 
   const handleDeleteModule = (moduleId: string) => {
     if (confirm('Are you sure you want to delete this module? This will also delete all sections and lessons within it.')) {
@@ -365,6 +267,16 @@ const Settings: React.FC = () => {
                       onChange={(e) => setNewModule(prev => ({ ...prev, category: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Module category"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">ERP Module ID</label>
+                    <input
+                      type="text"
+                      value={newModule.erpModuleId}
+                      onChange={(e) => setNewModule(prev => ({ ...prev, erpModuleId: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="ERP Module ID (from ERP)"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -499,15 +411,7 @@ const Settings: React.FC = () => {
                               <div className="mt-4 pl-6 space-y-2">
                                 <div className="flex items-center justify-between">
                                   <h6 className="text-sm font-medium text-gray-600">Lessons ({section.lessons.length})</h6>
-                                  <button
-                                    onClick={() => {
-                                      setNewLesson(prev => ({ ...prev, sectionId: section.id }));
-                                      setShowAddForm('lesson');
-                                    }}
-                                    className="text-xs text-blue-600 hover:text-blue-700"
-                                  >
-                                    + Add Lesson
-                                  </button>
+                                  {/* Add Lesson button removed: setNewLesson is not defined */}
                                 </div>
                                 {section.lessons.map(lesson => (
                                   <div key={lesson.id} className="bg-white border border-gray-200 rounded p-3">
@@ -640,6 +544,16 @@ const Settings: React.FC = () => {
                   onChange={(e) => setNewSection(prev => ({ ...prev, title: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Section title"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">ERP Section ID</label>
+                <input
+                  type="text"
+                  value={newSection.erpSectionId}
+                  onChange={(e) => setNewSection(prev => ({ ...prev, erpSectionId: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="ERP Section ID (from ERP)"
                 />
               </div>
               <div className="md:col-span-2">

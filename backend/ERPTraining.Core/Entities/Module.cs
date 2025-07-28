@@ -14,6 +14,7 @@ public class Module
     public string[] LearningObjectives { get; set; } = Array.Empty<string>();
     public bool IsActive { get; set; } = true;
     public int Order { get; set; }
+    public string? ErpModuleId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

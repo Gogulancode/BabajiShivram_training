@@ -13,7 +13,7 @@ import {
   CheckCircle,
   File
 } from 'lucide-react';
-import { modules } from '../data/mockData'; // ✅ IMPORTANT
+import { getModules } from '../lib/api';
 
 const iconMap = {
   ArrowDownToLine,
@@ -28,8 +28,13 @@ const iconMap = {
 };
 
 const ModulesPage: React.FC = () => {
+  const [modules, setModules] = useState<any[]>([]);
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('title');
+
+  React.useEffect(() => {
+    getModules().then(setModules).catch(console.error);
+  }, []);
 
   const filteredModules = modules.filter(module => {
     if (filter === 'completed') return module.progress >= 100;

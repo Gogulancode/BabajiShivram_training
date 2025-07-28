@@ -1,154 +1,185 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using AutoMapper;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
+
 using ERPTraining.Core.DTOs;
 using ERPTraining.Core.Entities;
 using ERPTraining.Core.Interfaces;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ERPTraining.Infrastructure.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
-    private readonly IConfiguration _configuration;
-    private readonly IMapper _mapper;
 
-    public AuthService(
-        UserManager<User> userManager,
-        SignInManager<User> signInManager,
-        IConfiguration configuration,
-        IMapper mapper)
+    private readonly IConfiguration _config;
+
+    // For demo, use in-memory users
+    private static readonly List<User> DummyUsers = new()
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
-        _configuration = configuration;
-        _mapper = mapper;
+        new User { Id = "1", UserName = "admin", Email = "admin@erptraining.com", FirstName = "Admin", LastName = "User", Department = "IT", IsActive = true },
+        new User { Id = "2", UserName = "qa", Email = "qa@erptraining.com", FirstName = "QA", LastName = "User", Department = "QA", IsActive = true },
+        new User { Id = "3", UserName = "manager", Email = "manager@erptraining.com", FirstName = "Manager", LastName = "User", Department = "Management", IsActive = true }
+    };
+    private static readonly Dictionary<string, string> DummyPasswords = new()
+    {
+        { "admin@erptraining.com", "admin123" },
+        { "qa@erptraining.com", "qa123" },
+        { "manager@erptraining.com", "manager123" }
+    };
+    private static readonly Dictionary<string, List<string>> DummyRoles = new()
+    {
+        { "admin@erptraining.com", new List<string> { "Admin" } },
+        { "qa@erptraining.com", new List<string> { "QA" } },
+        { "manager@erptraining.com", new List<string> { "Manager" } }
+    };
+
+    public AuthService(IConfiguration config)
+    {
+        _config = config;
     }
 
-    public async Task<AuthResponseDto?> LoginAsync(LoginDto loginDto)
+    public Task<AuthResponseDto?> LoginAsync(LoginDto loginDto)
     {
-        var user = await _userManager.FindByNameAsync(loginDto.UserName);
-        if (user == null || !user.IsActive)
-            return null;
+        var user = DummyUsers.FirstOrDefault(u => u.Email == loginDto.UserName && u.IsActive);
+        if (user == null) return Task.FromResult<AuthResponseDto?>(null);
+        if (!DummyPasswords.TryGetValue(loginDto.UserName, out var pwd) || pwd != loginDto.Password)
+            return Task.FromResult<AuthResponseDto?>(null);
 
-        var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
-        if (!result.Succeeded)
-            return null;
-
-        var token = await GenerateJwtTokenAsync(user);
-        var userDto = _mapper.Map<UserDto>(user);
-        userDto.Roles = (await _userManager.GetRolesAsync(user)).ToList();
-
-        return new AuthResponseDto
+        var roles = DummyRoles.TryGetValue(loginDto.UserName, out var r) ? r : new List<string> { "User" };
+        var token = GenerateJwtToken(user, roles);
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            UserName = user.UserName ?? string.Empty,
+            Email = user.Email ?? string.Empty,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = user.FullName,
+            Department = user.Department,
+            JoinDate = user.JoinDate,
+            Avatar = user.Avatar,
+            IsActive = user.IsActive,
+            Roles = roles
+        };
+        return Task.FromResult<AuthResponseDto?>(new AuthResponseDto
         {
             Token = token,
             User = userDto,
             Expires = DateTime.UtcNow.AddDays(7)
-        };
+        });
     }
 
-    public async Task<AuthResponseDto?> RegisterAsync(RegisterDto registerDto)
+    public Task<AuthResponseDto?> RegisterAsync(RegisterDto registerDto)
     {
-        var existingUser = await _userManager.FindByNameAsync(registerDto.UserName);
-        if (existingUser != null)
-            return null;
-
-        var existingEmail = await _userManager.FindByEmailAsync(registerDto.Email);
-        if (existingEmail != null)
-            return null;
-
+        // For demo, just add to DummyUsers and DummyPasswords
         var user = new User
         {
+            Id = Guid.NewGuid().ToString(),
             UserName = registerDto.UserName,
             Email = registerDto.Email,
             FirstName = registerDto.FirstName,
             LastName = registerDto.LastName,
             Department = registerDto.Department,
-            JoinDate = DateTime.UtcNow,
             IsActive = true
         };
-
-        var result = await _userManager.CreateAsync(user, registerDto.Password);
-        if (!result.Succeeded)
-            return null;
-
-        // Assign default role
-        await _userManager.AddToRoleAsync(user, "User");
-
-        var token = await GenerateJwtTokenAsync(user);
-        var userDto = _mapper.Map<UserDto>(user);
-        userDto.Roles = new List<string> { "User" };
-
-        return new AuthResponseDto
+        DummyUsers.Add(user);
+        DummyPasswords[registerDto.UserName] = registerDto.Password;
+        DummyRoles[registerDto.UserName] = new List<string> { "User" };
+        var token = GenerateJwtToken(user, DummyRoles[registerDto.UserName]);
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            UserName = user.UserName ?? string.Empty,
+            Email = user.Email ?? string.Empty,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = user.FullName,
+            Department = user.Department,
+            JoinDate = user.JoinDate,
+            Avatar = user.Avatar,
+            IsActive = user.IsActive,
+            Roles = DummyRoles[registerDto.UserName]
+        };
+        return Task.FromResult<AuthResponseDto?>(new AuthResponseDto
         {
             Token = token,
             User = userDto,
             Expires = DateTime.UtcNow.AddDays(7)
-        };
+        });
     }
 
-    public async Task<UserDto?> GetCurrentUserAsync(string userId)
+    private string GenerateJwtToken(User user, List<string> roles)
     {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null || !user.IsActive)
-            return null;
-
-        var userDto = _mapper.Map<UserDto>(user);
-        userDto.Roles = (await _userManager.GetRolesAsync(user)).ToList();
-
-        return userDto;
-    }
-
-    public async Task<bool> AssignRoleAsync(string userId, string role)
-    {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null)
-            return false;
-
-        var result = await _userManager.AddToRoleAsync(user, role);
-        return result.Succeeded;
-    }
-
-    public async Task<List<string>> GetUserRolesAsync(string userId)
-    {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null)
-            return new List<string>();
-
-        return (await _userManager.GetRolesAsync(user)).ToList();
-    }
-
-    private async Task<string> GenerateJwtTokenAsync(User user)
-    {
-        var roles = await _userManager.GetRolesAsync(user);
+        var jwtSection = _config.GetSection("Jwt");
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.Id),
-            new(ClaimTypes.Name, user.UserName!),
-            new(ClaimTypes.Email, user.Email!),
-            new("firstName", user.FirstName),
-            new("lastName", user.LastName),
-            new("department", user.Department)
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Name, user.UserName ?? ""),
+            new Claim(ClaimTypes.Email, user.Email ?? ""),
+            new Claim("FullName", user.FullName ?? ""),
+            new Claim("Department", user.Department ?? ""),
         };
-
-        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
         var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
+            issuer: jwtSection["Issuer"],
+            audience: jwtSection["Audience"],
             claims: claims,
             expires: DateTime.UtcNow.AddDays(7),
-            signingCredentials: credentials
+            signingCredentials: creds
         );
-
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+
+    public Task<UserDto?> GetCurrentUserAsync(string userId)
+    {
+        var user = DummyUsers.FirstOrDefault(u => u.Id == userId);
+        if (user == null) return Task.FromResult<UserDto?>(null);
+        var roles = DummyRoles.TryGetValue(user.UserName ?? string.Empty, out var r) ? r : new List<string> { "User" };
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            UserName = user.UserName ?? string.Empty,
+            Email = user.Email ?? string.Empty,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = user.FullName,
+            Department = user.Department,
+            JoinDate = user.JoinDate,
+            Avatar = user.Avatar,
+            IsActive = user.IsActive,
+            Roles = roles
+        };
+        return Task.FromResult<UserDto?>(userDto);
+    }
+
+    public Task<UserDto?> UpdateProfileAsync(string userId, UserDto updateDto)
+    {
+        // Dummy: just echo back the updated data for UAT/demo
+        updateDto.Id = userId;
+        return Task.FromResult<UserDto?>(updateDto);
+    }
+
+    public Task<bool> AssignRoleAsync(string userId, string role)
+    {
+        // Always return true
+        return Task.FromResult(true);
+    }
+
+    public Task<List<string>> GetUserRolesAsync(string userId)
+    {
+        // Always return Admin
+        return Task.FromResult(new List<string> { "Admin" });
     }
 }

@@ -13,7 +13,8 @@ import {
   Ship,
   Archive
 } from 'lucide-react';
-import { modules, recentUploads, currentUser } from '../data/mockData';
+import { useEffect, useState } from 'react';
+import { getModules, getCurrentUser } from '../lib/api';
 
 const iconMap = {
   ArrowDownToLine,
@@ -34,18 +35,89 @@ const fileTypeIcons = {
 };
 
 const Dashboard: React.FC = () => {
-  const completedModules = modules.filter(m => m.progress >= 100).length;
-  const inProgressModules = modules.filter(m => m.progress > 0 && m.progress < 100).length;
+  const [modules, setModules] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      getModules(),
+      getCurrentUser()
+    ])
+      .then(([modulesData, userData]) => {
+        setModules(modulesData);
+        setCurrentUser(userData);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  // Show skeleton UI while loading
+  if (loading) {
+    return (
+      <div className="space-y-8 animate-pulse">
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4" />
+          <div className="h-4 bg-gray-100 rounded w-1/2 mb-6" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="h-16 bg-gray-100 rounded-lg" />
+            <div className="h-16 bg-gray-100 rounded-lg" />
+            <div className="h-16 bg-gray-100 rounded-lg" />
+          </div>
+        </div>
+        <div>
+          <div className="h-6 bg-gray-200 rounded w-1/4 mb-4" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="h-40 bg-gray-100 rounded-lg" />
+            <div className="h-40 bg-gray-100 rounded-lg" />
+            <div className="h-40 bg-gray-100 rounded-lg" />
+          </div>
+        </div>
+        <div>
+          <div className="h-6 bg-gray-200 rounded w-1/4 mb-4" />
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="divide-y divide-gray-200">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="p-6 flex items-center space-x-4">
+                  <div className="h-10 w-10 bg-gray-100 rounded-lg" />
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
+                    <div className="h-3 bg-gray-100 rounded w-1/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const completedModules = modules.filter((m: any) => m.progress >= 100).length;
+  const inProgressModules = modules.filter((m: any) => m.progress > 0 && m.progress < 100).length;
+
+  // TODO: Replace with real API call for uploads
+  type Upload = {
+    id: string;
+    title: string;
+    description: string;
+    type: keyof typeof fileTypeIcons;
+    module: string;
+    uploadedBy: string;
+    uploadedAt: string;
+  };
+  const recentUploads: Upload[] = [];
 
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Welcome back, {currentUser.name}!
+          Welcome back, {currentUser?.name || 'User'}!
         </h1>
         <p className="text-gray-600">
-          You're logged in as <span className="font-medium text-blue-600">{currentUser.role}</span>.
+          You're logged in as <span className="font-medium text-blue-600">{currentUser?.role || 'User'}</span>.
           Continue your training journey or explore new modules.
         </p>
 
@@ -69,7 +141,7 @@ const Dashboard: React.FC = () => {
       <div>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">My Modules</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {modules.slice(0, 6).map((module) => {
+          {modules.slice(0, 6).map((module: any) => {
             const IconComponent =
               iconMap[module.icon as keyof typeof iconMap] || File;
 

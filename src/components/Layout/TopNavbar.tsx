@@ -1,10 +1,21 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Settings, ChevronDown, User, LogOut } from 'lucide-react';
 import { currentUser } from '../../data/mockData';
 
 const TopNavbar: React.FC = () => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Remove auth token from localStorage (adjust key if needed)
+    localStorage.removeItem('token');
+    // Optionally clear other user data
+    // localStorage.removeItem('user');
+    // Redirect to login page
+    navigate('/login');
+  };
 
   const notifications = [
     { id: 1, message: 'New training module available', time: '5 min ago' },
@@ -78,7 +89,10 @@ const TopNavbar: React.FC = () => {
                   <User className="h-4 w-4 mr-3" />
                   Profile Settings
                 </button>
-                <button className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                <button
+                  className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  onClick={handleLogout}
+                >
                   <LogOut className="h-4 w-4 mr-3" />
                   Logout
                 </button>

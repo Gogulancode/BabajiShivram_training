@@ -8,6 +8,7 @@ public class Section
     public int ModuleId { get; set; }
     public int Order { get; set; }
     public bool IsActive { get; set; } = true;
+    public string? ErpSectionId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

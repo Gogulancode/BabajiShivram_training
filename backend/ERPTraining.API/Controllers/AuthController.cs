@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ERPTraining.Core.DTOs;
@@ -15,6 +16,21 @@ public class AuthController : ControllerBase
     public AuthController(IAuthService authService)
     {
         _authService = authService;
+    }
+
+    [HttpPut("me")]
+    [Authorize]
+    public async Task<ActionResult<UserDto>> UpdateProfile([FromBody] UserDto updateDto)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var updatedUser = await _authService.UpdateProfileAsync(userId, updateDto);
+        if (updatedUser == null)
+            return NotFound();
+
+        return Ok(updatedUser);
     }
 
     [HttpPost("login")]
