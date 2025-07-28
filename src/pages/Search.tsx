@@ -12,48 +12,8 @@ interface SearchResult {
   uploadedAt: string;
 }
 
-const mockResults: SearchResult[] = [
-  {
-    id: '1',
-    title: 'Import Process Workflow Guide',
-    type: 'pdf',
-    module: 'Import Management',
-    tags: ['workflow', 'documentation', 'step-by-step'],
-    description: 'Comprehensive guide covering the complete import process workflow',
-    uploadedBy: 'Sarah Wilson',
-    uploadedAt: '2 days ago'
-  },
-  {
-    id: '2',
-    title: 'Export Compliance Screenshots',
-    type: 'image',
-    module: 'Export Operations',
-    tags: ['compliance', 'screenshots', 'ui'],
-    description: 'UI screenshots showing export compliance procedures',
-    uploadedBy: 'Mike Chen',
-    uploadedAt: '5 days ago'
-  },
-  {
-    id: '3',
-    title: 'Freight Booking Manual',
-    type: 'doc',
-    module: 'Freight Management',
-    tags: ['booking', 'manual', 'procedures'],
-    description: 'Detailed manual for freight booking procedures and best practices',
-    uploadedBy: 'Lisa Parker',
-    uploadedAt: '1 week ago'
-  },
-  {
-    id: '4',
-    title: 'Inventory Control Scribe Guide',
-    type: 'scribe',
-    module: 'Inventory Control',
-    tags: ['scribe', 'tutorial', 'inventory'],
-    description: 'Interactive Scribe tutorial for inventory control processes',
-    uploadedBy: 'David Kim',
-    uploadedAt: '3 days ago'
-  }
-];
+import { useEffect } from 'react';
+import { getUploadedContent } from '../lib/api';
 
 const fileTypeIcons = {
   pdf: FileText,
@@ -68,15 +28,29 @@ const Search: React.FC = () => {
   const [selectedType, setSelectedType] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [results, setResults] = useState<SearchResult[]>(mockResults);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    getUploadedContent()
+      .then((data) => {
+        setResults(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError('Failed to load search results');
+        setLoading(false);
+      });
+  }, []);
 
   const modules = ['Import Management', 'Export Operations', 'Freight Management', 'Inventory Control', 'Financial Reports', 'Customer Management'];
   const documentTypes = ['PDF', 'Document', 'Image', 'Scribe'];
   const availableTags = ['workflow', 'documentation', 'screenshots', 'compliance', 'manual', 'tutorial', 'procedures', 'step-by-step'];
 
   const handleSearch = () => {
-    let filteredResults = mockResults;
-
+    let filteredResults = results;
     if (searchQuery) {
       filteredResults = filteredResults.filter(result =>
         result.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

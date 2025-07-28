@@ -27,7 +27,7 @@ public class RegisterDto
 
 public class LoginDto
 {
-    public string UserName { get; set; } = string.Empty;
+    public string UserName { get; set; } = string.Empty; // This should be an email address
     public string Password { get; set; } = string.Empty;
 }
 

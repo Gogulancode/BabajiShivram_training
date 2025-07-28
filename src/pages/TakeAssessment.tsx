@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -10,6 +11,7 @@ import {
   Save,
   Send
 } from 'lucide-react';
+import { getAssessment } from '../lib/api';
 
 interface Question {
   id: string;
@@ -30,73 +32,8 @@ interface Assessment {
   passingScore: number;
 }
 
-const mockAssessment: Assessment = {
-  id: '1',
-  title: 'Import Management Fundamentals Quiz',
-  description: 'Test your knowledge of import processes, documentation, and basic procedures',
-  timeLimit: 30,
-  passingScore: 80,
-  questions: [
-    {
-      id: '1',
-      type: 'multiple-choice',
-      question: 'What is the primary purpose of a Bill of Lading in import operations?',
-      options: [
-        'To calculate customs duties',
-        'To serve as a receipt and contract for transportation',
-        'To determine product quality',
-        'To set the selling price'
-      ],
-      correctAnswer: 'To serve as a receipt and contract for transportation',
-      explanation: 'A Bill of Lading serves as a receipt for goods shipped, a contract between the shipper and carrier, and a document of title.',
-      points: 5
-    },
-    {
-      id: '2',
-      type: 'true-false',
-      question: 'All imported goods must go through customs inspection regardless of their value.',
-      correctAnswer: 'false',
-      explanation: 'Not all goods require physical inspection. Many are cleared through automated systems based on risk assessment.',
-      points: 3
-    },
-    {
-      id: '3',
-      type: 'multiple-choice',
-      question: 'Which document is required to prove the origin of imported goods?',
-      options: [
-        'Commercial Invoice',
-        'Certificate of Origin',
-        'Packing List',
-        'Insurance Certificate'
-      ],
-      correctAnswer: 'Certificate of Origin',
-      explanation: 'A Certificate of Origin proves where goods were manufactured and may affect duty rates under trade agreements.',
-      points: 5
-    },
-    {
-      id: '4',
-      type: 'short-answer',
-      question: 'What does "CIF" stand for in international trade terms?',
-      correctAnswer: 'Cost, Insurance, and Freight',
-      explanation: 'CIF means the seller pays for cost, insurance, and freight to deliver goods to the destination port.',
-      points: 4
-    },
-    {
-      id: '5',
-      type: 'multiple-choice',
-      question: 'What is the purpose of an Import License?',
-      options: [
-        'To track shipment location',
-        'To authorize the import of restricted goods',
-        'To calculate shipping costs',
-        'To determine product quality'
-      ],
-      correctAnswer: 'To authorize the import of restricted goods',
-      explanation: 'Import licenses are required for certain restricted or controlled goods to ensure compliance with regulations.',
-      points: 5
-    }
-  ]
-};
+
+// ...existing code...
 
 const TakeAssessment: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -153,7 +90,7 @@ const TakeAssessment: React.FC = () => {
       navigate(`/assessments/${id}/results`, { 
         state: { 
           answers, 
-          timeSpent: (mockAssessment.timeLimit * 60) - timeRemaining 
+          timeSpent: (assessment ? assessment.timeLimit * 60 : 0) - timeRemaining 
         } 
       });
     }, 1000);
@@ -163,8 +100,8 @@ const TakeAssessment: React.FC = () => {
     return Object.keys(answers).length;
   };
 
-  const currentQ = mockAssessment.questions[currentQuestion];
-  const isLastQuestion = currentQuestion === mockAssessment.questions.length - 1;
+  const currentQ = assessment ? assessment.questions[currentQuestion] : null;
+  const isLastQuestion = assessment ? currentQuestion === assessment.questions.length - 1 : false;
   const isFirstQuestion = currentQuestion === 0;
 
   if (isSubmitted) {
@@ -192,16 +129,16 @@ const TakeAssessment: React.FC = () => {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">{mockAssessment.title}</h1>
+              <h1 className="text-xl font-semibold text-gray-900">{assessment?.title}</h1>
               <p className="text-sm text-gray-600">
-                Question {currentQuestion + 1} of {mockAssessment.questions.length}
+                Question {currentQuestion + 1} of {assessment?.questions.length ?? 0}
               </p>
             </div>
           </div>
           
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <span>Answered: {getAnsweredCount()}/{mockAssessment.questions.length}</span>
+              <span>Answered: {getAnsweredCount()}/{assessment?.questions.length ?? 0}</span>
             </div>
             <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${
               timeRemaining < 300 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
@@ -220,7 +157,7 @@ const TakeAssessment: React.FC = () => {
             <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 sticky top-6">
               <h3 className="font-medium text-gray-900 mb-4">Questions</h3>
               <div className="grid grid-cols-5 lg:grid-cols-1 gap-2">
-                {mockAssessment.questions.map((q, index) => (
+                {assessment?.questions.map((q, index) => (
                   <button
                     key={q.id}
                     onClick={() => setCurrentQuestion(index)}
@@ -265,16 +202,18 @@ const TakeAssessment: React.FC = () => {
               {/* Question Header */}
               <div className="flex items-start justify-between mb-6">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-                      {currentQ.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    </span>
-                    <span className="text-sm text-gray-500">{currentQ.points} points</span>
-                  </div>
-                  <h2 className="text-lg font-medium text-gray-900">{currentQ.question}</h2>
+                  {currentQ && (
+                    <>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                        {currentQ.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </span>
+                      <span className="text-sm text-gray-500">{currentQ.points} points</span>
+                      <h2 className="text-lg font-medium text-gray-900">{currentQ.question}</h2>
+                    </>
+                  )}
                 </div>
                 <button
-                  onClick={() => toggleFlag(currentQ.id)}
+                  onClick={() => currentQ && toggleFlag(currentQ.id)}
                   className={`p-2 rounded-lg transition-colors ${
                     flaggedQuestions.has(currentQ.id)
                       ? 'bg-orange-100 text-orange-600'
@@ -287,7 +226,7 @@ const TakeAssessment: React.FC = () => {
 
               {/* Answer Options */}
               <div className="space-y-4 mb-8">
-                {currentQ.type === 'multiple-choice' && currentQ.options && (
+                {currentQ?.type === 'multiple-choice' && currentQ.options && (
                   <div className="space-y-3">
                     {currentQ.options.map((option, index) => (
                       <label
@@ -325,7 +264,7 @@ const TakeAssessment: React.FC = () => {
                   </div>
                 )}
 
-                {currentQ.type === 'true-false' && (
+                {currentQ?.type === 'true-false' && (
                   <div className="space-y-3">
                     {['True', 'False'].map((option) => (
                       <label
@@ -363,7 +302,7 @@ const TakeAssessment: React.FC = () => {
                   </div>
                 )}
 
-                {currentQ.type === 'short-answer' && (
+                {currentQ?.type === 'short-answer' && (
                   <textarea
                     value={answers[currentQ.id] || ''}
                     onChange={(e) => handleAnswerChange(currentQ.id, e.target.value)}
@@ -410,7 +349,7 @@ const TakeAssessment: React.FC = () => {
                     </button>
                   ) : (
                     <button
-                      onClick={() => setCurrentQuestion(Math.min(mockAssessment.questions.length - 1, currentQuestion + 1))}
+                    onClick={() => setCurrentQuestion(assessment ? Math.min(assessment.questions.length - 1, currentQuestion + 1) : currentQuestion)}
                       className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       Next
@@ -435,11 +374,11 @@ const TakeAssessment: React.FC = () => {
             
             <div className="space-y-3 mb-6">
               <p className="text-gray-600">
-                You have answered {getAnsweredCount()} out of {mockAssessment.questions.length} questions.
+                You have answered {getAnsweredCount()} out of {assessment?.questions.length ?? 0} questions.
               </p>
-              {getAnsweredCount() < mockAssessment.questions.length && (
+              {assessment && getAnsweredCount() < assessment.questions.length && (
                 <p className="text-orange-600 text-sm">
-                  You have {mockAssessment.questions.length - getAnsweredCount()} unanswered questions.
+                  You have {assessment.questions.length - getAnsweredCount()} unanswered questions.
                 </p>
               )}
               <p className="text-gray-600">

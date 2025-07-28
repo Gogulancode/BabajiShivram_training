@@ -255,7 +255,8 @@ function insertSampleData() {
   `);
 
   // Note: In production, use proper password hashing (bcrypt)
-  insertUser.run('admin-1', 'admin@erptraining.com', 'hashed_password_admin', 'System', 'Administrator', 'IT', 'Admin');
+  // Password: Admin@123
+  insertUser.run('admin-1', 'admin@erptraining.com', '$2b$12$9ATcQf1l7ABNXgTYq3wU5uMIpgz9R8mTheDkT3TGcugZHVMR5z3yq', 'System', 'Administrator', 'IT', 'Admin');
   insertUser.run('qa-1', 'qa@erptraining.com', 'hashed_password_qa', 'Quality', 'Assurance', 'Training', 'QA');
   insertUser.run('user-1', 'john.doe@erptraining.com', 'hashed_password_user', 'John', 'Doe', 'Operations', 'User');
 

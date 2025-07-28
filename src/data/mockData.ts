@@ -371,7 +371,6 @@ export const assessments: Assessment[] = [
     attempts: [],
     maxAttempts: 3,
     isActive: true,
-    isRequired: false,
-    sectionId: '1-2'
+    isRequired: false
   }
 ];

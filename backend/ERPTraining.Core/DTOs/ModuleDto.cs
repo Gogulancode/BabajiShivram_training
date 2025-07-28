@@ -14,6 +14,7 @@ public class ModuleDto
     public string[] LearningObjectives { get; set; } = Array.Empty<string>();
     public bool IsActive { get; set; }
     public int Order { get; set; }
+    public string? ErpModuleId { get; set; }
     public int Progress { get; set; }
     public bool IsLocked { get; set; }
     public List<SectionDto> Sections { get; set; } = new();
@@ -31,6 +32,7 @@ public class CreateModuleDto
     public string[] Prerequisites { get; set; } = Array.Empty<string>();
     public string[] LearningObjectives { get; set; } = Array.Empty<string>();
     public int Order { get; set; }
+    public string? ErpModuleId { get; set; }
 }
 
 public class UpdateModuleDto
@@ -46,4 +48,5 @@ public class UpdateModuleDto
     public string[] LearningObjectives { get; set; } = Array.Empty<string>();
     public bool IsActive { get; set; }
     public int Order { get; set; }
+    public string? ErpModuleId { get; set; }
 }
