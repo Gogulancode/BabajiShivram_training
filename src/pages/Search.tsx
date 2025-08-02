@@ -45,7 +45,7 @@ const Search: React.FC = () => {
       });
   }, []);
 
-  const modules = ['Import Management', 'Export Operations', 'Freight Management', 'Inventory Control', 'Financial Reports', 'Customer Management'];
+  const modules = ['Freight Management', 'Inventory Control', 'Financial Reports', 'Customer Management'];
   const documentTypes = ['PDF', 'Document', 'Image', 'Scribe'];
   const availableTags = ['workflow', 'documentation', 'screenshots', 'compliance', 'manual', 'tutorial', 'procedures', 'step-by-step'];
 

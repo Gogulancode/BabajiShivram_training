@@ -1,19 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Upload, FileText, Image, Link, X, Plus, Video } from 'lucide-react';
-
-interface Section {
-  id: string;
-  title: string;
-  moduleId: string;
-}
-
-interface Module {
-  id: string;
-  title: string;
-  sections: Section[];
-}
+import { getModules, getSectionsByModule } from '../lib/api';
+import { Module, Section } from '../types';
 
 const UploadContent: React.FC = () => {
+  const [modules, setModules] = useState<Module[]>([]);
+  const [sections, setSections] = useState<Section[]>([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     title: '',
     module: '',
@@ -21,6 +14,7 @@ const UploadContent: React.FC = () => {
     description: '',
     scribeLink: '',
     videoUrl: '',
+    contentType: 'document',
     tags: [] as string[],
     accessRoles: [] as string[],
     lessonIndex: 1
@@ -30,63 +24,73 @@ const UploadContent: React.FC = () => {
   const [document, setDocument] = useState<File | null>(null);
   const [newTag, setNewTag] = useState('');
 
-  // Mock data - in real app this would come from API
-  const modules: Module[] = [
-    {
-      id: '1',
-      title: 'Import Management',
-      sections: [
-        { id: '1-1', title: 'Import Fundamentals', moduleId: '1' },
-        { id: '1-2', title: 'Documentation & Compliance', moduleId: '1' },
-        { id: '1-3', title: 'Customs Procedures', moduleId: '1' }
-      ]
-    },
-    {
-      id: '2',
-      title: 'Export Operations',
-      sections: [
-        { id: '2-1', title: 'Export Basics', moduleId: '2' },
-        { id: '2-2', title: 'International Regulations', moduleId: '2' }
-      ]
-    },
-    {
-      id: '3',
-      title: 'Freight Management',
-      sections: [
-        { id: '3-1', title: 'Freight Booking', moduleId: '3' },
-        { id: '3-2', title: 'Cost Optimization', moduleId: '3' }
-      ]
-    },
-    {
-      id: '4',
-      title: 'Inventory Control',
-      sections: [
-        { id: '4-1', title: 'Stock Management', moduleId: '4' },
-        { id: '4-2', title: 'Warehouse Operations', moduleId: '4' }
-      ]
-    },
-    {
-      id: '5',
-      title: 'Financial Reports',
-      sections: [
-        { id: '5-1', title: 'Report Generation', moduleId: '5' },
-        { id: '5-2', title: 'Data Analysis', moduleId: '5' }
-      ]
-    },
-    {
-      id: '6',
-      title: 'Customer Management',
-      sections: [
-        { id: '6-1', title: 'Customer Data', moduleId: '6' },
-        { id: '6-2', title: 'Relationship Management', moduleId: '6' }
-      ]
-    }
-  ];
+  // Load modules and sections on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        // Only load modules initially, sections will be loaded when module is selected
+        const modulesData = await getModules();
+        console.log('Modules loaded:', modulesData);
+        setModules(modulesData);
+      } catch (error) {
+        console.error('Error loading modules:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const roles = ['Admin', 'QA', 'User', 'Manager', 'Supervisor'];
+    loadData();
+  }, []);
 
-  const selectedModule = modules.find(m => m.id === formData.module);
-  const availableSections = selectedModule ? selectedModule.sections : [];
+  // Load sections when module changes
+  useEffect(() => {
+    const loadSections = async () => {
+      if (!formData.module) {
+        console.log('No module selected, clearing sections');
+        setSections([]);
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        console.log('Loading sections for module:', formData.module);
+        // Convert module ID to number if it's a string
+        const moduleId = parseInt(formData.module);
+        const sectionsData = await getSectionsByModule(moduleId);
+        console.log('Sections loaded:', sectionsData);
+        setSections(sectionsData || []);
+      } catch (error) {
+        console.error('Error loading sections:', error);
+        setSections([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSections();
+  }, [formData.module]);
+
+  const [availableRoles, setAvailableRoles] = useState<string[]>([]);
+
+  // Load roles on component mount
+  useEffect(() => {
+    const loadRoles = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/roles');
+        const roles = await response.json();
+        setAvailableRoles(roles);
+      } catch (error) {
+        console.error('Error loading roles:', error);
+        setAvailableRoles(['Admin', 'User']); // Fallback roles
+      }
+    };
+
+    loadRoles();
+  }, []);
+
+  // Sections are already filtered by module in the state
+  const availableSections = sections || [];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -152,7 +156,15 @@ const UploadContent: React.FC = () => {
         <p className="text-gray-600 mt-2">Add new training materials for ERP modules</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-600 mt-4">Loading modules and sections...</p>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-8">
         {/* Basic Information */}
         <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
@@ -195,7 +207,7 @@ const UploadContent: React.FC = () => {
 
             <div>
               <label htmlFor="section" className="block text-sm font-medium text-gray-700 mb-2">
-                Section *
+                Section * {sections.length > 0 && `(${sections.length} available)`}
               </label>
               <select
                 id="section"
@@ -206,13 +218,23 @@ const UploadContent: React.FC = () => {
                 disabled={!formData.module}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
-                <option value="">Select a section</option>
+                <option value="">
+                  {!formData.module 
+                    ? 'Select a module first' 
+                    : sections.length === 0 
+                      ? 'Loading sections...' 
+                      : 'Select a section'
+                  }
+                </option>
                 {availableSections.map(section => (
                   <option key={section.id} value={section.id}>{section.title}</option>
                 ))}
               </select>
               {!formData.module && (
                 <p className="text-xs text-gray-500 mt-1">Please select a module first</p>
+              )}
+              {formData.module && sections.length === 0 && (
+                <p className="text-xs text-orange-600 mt-1">No sections found for this module</p>
               )}
             </div>
           </div>
@@ -498,18 +520,20 @@ const UploadContent: React.FC = () => {
             {/* Access Roles */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Access Roles</label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {roles.map(role => (
-                  <label key={role} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.accessRoles.includes(role)}
-                      onChange={() => handleRoleToggle(role)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">{role}</span>
-                  </label>
-                ))}
+              <div className="bg-white p-4 rounded-lg shadow">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {availableRoles.map(role => (
+                    <label key={role} className="flex items-center space-x-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.accessRoles.includes(role)}
+                        onChange={() => handleRoleToggle(role)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                      />
+                      <span className="text-sm text-gray-700 font-medium">{role}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -526,6 +550,7 @@ const UploadContent: React.FC = () => {
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 };

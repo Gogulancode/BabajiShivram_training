@@ -1,7 +1,7 @@
 // Update profile
 export const updateProfile = (data) => apiFetch('/auth/me', { method: 'PUT', body: JSON.stringify(data) });
 
-const API_BASE = 'http://localhost:5000/api'; // Change port if needed
+const API_BASE = 'http://localhost:5000/api'; // Backend running on port 5000
 
 function getToken(): string | null {
   return localStorage.getItem('token');
@@ -29,6 +29,14 @@ export const getModules = () => apiFetch('/Modules');
 export const getModule = (id: any) => apiFetch(`/Modules/${id}`);
 export const createModule = (data: any) => apiFetch('/Modules', { method: 'POST', body: JSON.stringify(data) });
 export const updateModule = (id: any, data: any) => apiFetch(`/Modules/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+
+// Sections
+export const getSections = () => apiFetch('/Sections');
+export const getSection = (id: any) => apiFetch(`/Sections/${id}`);
+export const getSectionsByModule = (moduleId: any) => apiFetch(`/Sections/module/${moduleId}`);
+export const createSection = (data: any) => apiFetch('/Sections', { method: 'POST', body: JSON.stringify(data) });
+export const updateSection = (id: any, data: any) => apiFetch(`/Sections/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteSection = (id: any) => apiFetch(`/Sections/${id}`, { method: 'DELETE' });
 
 // Assessments
 export const getAssessments = () => apiFetch('/assessments');
@@ -59,3 +67,19 @@ export const getUploadedContent = async () => {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 };
+
+// Roles
+export const getRoles = () => apiFetch('/Roles');
+export const getRole = (id: any) => apiFetch(`/Roles/${id}`);
+export const createRole = (data: any) => apiFetch('/Roles', { method: 'POST', body: JSON.stringify(data) });
+export const updateRole = (id: any, data: any) => apiFetch(`/Roles/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteRole = (id: any) => apiFetch(`/Roles/${id}`, { method: 'DELETE' });
+
+// Role Access
+export const getRoleAccess = () => apiFetch('/roleaccess');
+export const getRoleAccessByRoleId = (roleId: string) => apiFetch(`/roleaccess/role/${roleId}`);
+export const getRolesWithAccess = () => apiFetch('/roleaccess/roles-summary');
+export const seedRoleData = () => apiFetch('/roleaccess/seed-data', { method: 'POST' });
+export const updateRoleAccess = (roleId: string, data: any) => apiFetch(`/roleaccess/role/${roleId}`, { method: 'PUT', body: JSON.stringify(data) });
+export const checkUserAccess = (userId: string, moduleId: number, sectionId: number) => 
+  apiFetch(`/roleaccess/check-access?userId=${userId}&moduleId=${moduleId}&sectionId=${sectionId}`);

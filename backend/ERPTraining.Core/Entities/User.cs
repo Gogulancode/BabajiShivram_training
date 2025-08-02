@@ -18,4 +18,5 @@ public class User : IdentityUser
     public virtual ICollection<UserModuleProgress> ModuleProgress { get; set; } = new List<UserModuleProgress>();
     public virtual ICollection<AssessmentAttempt> AssessmentAttempts { get; set; } = new List<AssessmentAttempt>();
     public virtual ICollection<UploadedContent> UploadedContents { get; set; } = new List<UploadedContent>();
+    public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 }

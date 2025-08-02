@@ -41,7 +41,6 @@ function createTables() {
       title TEXT NOT NULL,
       description TEXT NOT NULL,
       icon TEXT NOT NULL,
-      category TEXT NOT NULL,
       color TEXT DEFAULT 'blue',
       estimated_time TEXT NOT NULL,
       difficulty TEXT NOT NULL CHECK (difficulty IN ('Beginner', 'Intermediate', 'Advanced')),
@@ -262,70 +261,163 @@ function insertSampleData() {
 
   // Insert sample modules
   const insertModule = db.prepare(`
-    INSERT INTO modules (title, description, icon, category, estimated_time, difficulty, learning_objectives, order_index)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO modules (title, description, icon, estimated_time, difficulty, learning_objectives, order_index)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
 
   const modules = [
     {
-      title: 'Import Management',
-      description: 'Learn the fundamentals of import management, documentation, and compliance procedures.',
-      icon: 'Package',
-      category: 'Trade Operations',
+      title: 'CB – Imports',
+      description: 'Comprehensive training on customs bonded imports and related procedures.',
+      icon: 'Download',
       estimatedTime: '2-3 hours',
-      difficulty: 'Beginner',
-      objectives: JSON.stringify(['Understand import documentation requirements', 'Learn compliance procedures', 'Master import cost calculations']),
+      difficulty: 'Intermediate',
+      objectives: JSON.stringify(['Master import procedures', 'Understand customs bonded operations', 'Learn compliance requirements']),
       order: 1
     },
     {
-      title: 'Export Operations',
-      description: 'Master export procedures, documentation, and international shipping requirements.',
+      title: 'Freight Forwarding',
+      description: 'Learn freight forwarding operations, documentation, and logistics management.',
       icon: 'Truck',
-      category: 'Trade Operations',
       estimatedTime: '2-3 hours',
       difficulty: 'Intermediate',
-      objectives: JSON.stringify(['Understand export documentation', 'Learn shipping procedures', 'Master export regulations']),
+      objectives: JSON.stringify(['Master freight forwarding processes', 'Understand logistics coordination', 'Learn documentation requirements']),
       order: 2
     },
     {
-      title: 'Freight Management',
-      description: 'Learn freight booking, tracking, and cost optimization strategies.',
-      icon: 'Ship',
-      category: 'Logistics',
+      title: 'NBCPL',
+      description: 'Training on NBCPL (New Bombay Container Port Limited) operations and procedures.',
+      icon: 'Container',
       estimatedTime: '1-2 hours',
-      difficulty: 'Intermediate',
-      objectives: JSON.stringify(['Master freight booking procedures', 'Understand shipping modes', 'Learn cost optimization']),
+      difficulty: 'Beginner',
+      objectives: JSON.stringify(['Learn NBCPL operations', 'Understand port procedures', 'Master container handling']),
       order: 3
     },
     {
-      title: 'Inventory Control',
-      description: 'Optimize inventory levels, tracking, and warehouse management.',
-      icon: 'Archive',
-      category: 'Operations',
+      title: 'Company Services',
+      description: 'Overview of company services, policies, and internal procedures.',
+      icon: 'Building',
       estimatedTime: '1-2 hours',
       difficulty: 'Beginner',
-      objectives: JSON.stringify(['Learn inventory optimization', 'Master stock tracking', 'Understand warehouse management']),
+      objectives: JSON.stringify(['Understand company services', 'Learn internal policies', 'Master service procedures']),
       order: 4
     },
     {
-      title: 'Financial Reports',
-      description: 'Generate insights through comprehensive reporting and data analysis.',
-      icon: 'BarChart3',
-      category: 'Finance',
-      estimatedTime: '1-2 hours',
-      difficulty: 'Advanced',
-      objectives: JSON.stringify(['Master report generation', 'Learn data analysis', 'Understand KPI tracking']),
+      title: 'CB – Exports',
+      description: 'Comprehensive training on customs bonded exports and related procedures.',
+      icon: 'Upload',
+      estimatedTime: '2-3 hours',
+      difficulty: 'Intermediate',
+      objectives: JSON.stringify(['Master export procedures', 'Understand customs bonded operations', 'Learn export compliance']),
       order: 5
     },
     {
-      title: 'Customer Management',
-      description: 'Build and maintain strong customer relationships and communication.',
-      icon: 'Users',
-      category: 'CRM',
-      estimatedTime: '1 hour',
-      difficulty: 'Beginner',
-      objectives: JSON.stringify(['Learn customer communication', 'Master relationship building', 'Understand service excellence']),
+      title: 'Contracts',
+      description: 'Learn contract management, negotiation, and legal compliance.',
+      icon: 'FileText',
+      estimatedTime: '2-3 hours',
+      difficulty: 'Advanced',
+      objectives: JSON.stringify(['Master contract management', 'Understand legal requirements', 'Learn negotiation strategies']),
       order: 6
+    },
+    {
+      title: 'SEZ',
+      description: 'Special Economic Zone operations, benefits, and compliance requirements.',
+      icon: 'Globe',
+      estimatedTime: '1-2 hours',
+      difficulty: 'Intermediate',
+      objectives: JSON.stringify(['Understand SEZ operations', 'Learn compliance requirements', 'Master zone benefits']),
+      order: 8
+    },
+    {
+      title: 'Ops Accounting',
+      description: 'Operations accounting procedures, financial management, and reporting.',
+      icon: 'Calculator',
+      estimatedTime: '2-3 hours',
+      difficulty: 'Advanced',
+      objectives: JSON.stringify(['Master accounting procedures', 'Learn financial management', 'Understand reporting requirements']),
+      order: 9
+    },
+    {
+      title: 'Container Movement',
+      description: 'Container logistics, movement tracking, and operational efficiency.',
+      icon: 'Move',
+      estimatedTime: '1-2 hours',
+      difficulty: 'Intermediate',
+      objectives: JSON.stringify(['Learn container logistics', 'Master movement tracking', 'Understand operational efficiency']),
+      order: 10
+    },
+    {
+      title: 'CRM',
+      description: 'Customer Relationship Management systems, processes, and best practices.',
+      icon: 'Users',
+      estimatedTime: '1-2 hours',
+      difficulty: 'Beginner',
+      objectives: JSON.stringify(['Master CRM systems', 'Learn customer management', 'Understand relationship building']),
+      order: 11
+    },
+    {
+      title: 'Babaji Transport',
+      description: 'Transport operations, fleet management, and logistics coordination.',
+      icon: 'Truck',
+      estimatedTime: '1-2 hours',
+      difficulty: 'Intermediate',
+      objectives: JSON.stringify(['Learn transport operations', 'Master fleet management', 'Understand logistics coordination']),
+      order: 12
+    },
+    {
+      title: 'Additional Job',
+      description: 'Additional job responsibilities, cross-functional training, and skill development.',
+      icon: 'Plus',
+      estimatedTime: '1-2 hours',
+      difficulty: 'Beginner',
+      objectives: JSON.stringify(['Learn additional responsibilities', 'Understand cross-functional roles', 'Develop new skills']),
+      order: 13
+    },
+    {
+      title: 'MIS',
+      description: 'Management Information Systems, data analysis, and reporting tools.',
+      icon: 'BarChart3',
+      estimatedTime: '2-3 hours',
+      difficulty: 'Advanced',
+      objectives: JSON.stringify(['Master MIS systems', 'Learn data analysis', 'Understand reporting tools']),
+      order: 15
+    },
+    {
+      title: 'Essential Certificate',
+      description: 'Essential certification requirements, documentation, and compliance procedures.',
+      icon: 'Award',
+      estimatedTime: '1-2 hours',
+      difficulty: 'Intermediate',
+      objectives: JSON.stringify(['Understand certification requirements', 'Learn documentation procedures', 'Master compliance processes']),
+      order: 35
+    },
+    {
+      title: 'Equipment Hire',
+      description: 'Equipment hire processes, rental management, and maintenance procedures.',
+      icon: 'Settings',
+      estimatedTime: '1-2 hours',
+      difficulty: 'Beginner',
+      objectives: JSON.stringify(['Learn equipment hire processes', 'Understand rental management', 'Master maintenance procedures']),
+      order: 45
+    },
+    {
+      title: 'Public Notice',
+      description: 'Public notice requirements, communication protocols, and regulatory compliance.',
+      icon: 'Bell',
+      estimatedTime: '1-2 hours',
+      difficulty: 'Beginner',
+      objectives: JSON.stringify(['Understand public notice requirements', 'Learn communication protocols', 'Master regulatory compliance']),
+      order: 50
+    },
+    {
+      title: 'Project',
+      description: 'Project management methodologies, planning, and execution strategies.',
+      icon: 'FolderOpen',
+      estimatedTime: '2-3 hours',
+      difficulty: 'Advanced',
+      objectives: JSON.stringify(['Master project management', 'Learn planning methodologies', 'Understand execution strategies']),
+      order: 55
     }
   ];
 
@@ -334,7 +426,6 @@ function insertSampleData() {
       module.title,
       module.description,
       module.icon,
-      module.category,
       module.estimatedTime,
       module.difficulty,
       module.objectives,
@@ -349,19 +440,77 @@ function insertSampleData() {
   `);
 
   const sections = [
-    { title: 'Import Fundamentals', description: 'Basic concepts and terminology', moduleId: 1, order: 1 },
-    { title: 'Documentation & Compliance', description: 'Required documents and regulatory compliance', moduleId: 1, order: 2 },
-    { title: 'Customs Procedures', description: 'Customs clearance and procedures', moduleId: 1, order: 3 },
-    { title: 'Export Basics', description: 'Fundamental export concepts', moduleId: 2, order: 1 },
-    { title: 'International Regulations', description: 'Export regulations and compliance', moduleId: 2, order: 2 },
-    { title: 'Freight Booking', description: 'Booking and managing freight shipments', moduleId: 3, order: 1 },
-    { title: 'Cost Optimization', description: 'Strategies for freight cost optimization', moduleId: 3, order: 2 },
-    { title: 'Stock Management', description: 'Managing inventory and stock levels', moduleId: 4, order: 1 },
-    { title: 'Warehouse Operations', description: 'Warehouse management best practices', moduleId: 4, order: 2 },
-    { title: 'Report Generation', description: 'Creating and customizing reports', moduleId: 5, order: 1 },
-    { title: 'Data Analysis', description: 'Analyzing data and generating insights', moduleId: 5, order: 2 },
-    { title: 'Customer Data', description: 'Managing customer information', moduleId: 6, order: 1 },
-    { title: 'Relationship Management', description: 'Building strong customer relationships', moduleId: 6, order: 2 }
+    // CB – Imports (Module 1)
+    { title: 'Import Fundamentals', description: 'Basic concepts and terminology for imports', moduleId: 1, order: 1 },
+    { title: 'Customs Bonded Procedures', description: 'Customs bonded warehouse operations and procedures', moduleId: 1, order: 2 },
+    { title: 'Documentation & Compliance', description: 'Required documents and regulatory compliance for imports', moduleId: 1, order: 3 },
+    
+    // Freight Forwarding (Module 2)
+    { title: 'Freight Forwarding Basics', description: 'Introduction to freight forwarding operations', moduleId: 2, order: 1 },
+    { title: 'Documentation Management', description: 'Managing freight forwarding documentation', moduleId: 2, order: 2 },
+    { title: 'Logistics Coordination', description: 'Coordinating multi-modal logistics operations', moduleId: 2, order: 3 },
+    
+    // NBCPL (Module 3)
+    { title: 'Port Operations', description: 'NBCPL port operations and procedures', moduleId: 3, order: 1 },
+    { title: 'Container Handling', description: 'Container operations at NBCPL', moduleId: 3, order: 2 },
+    
+    // Company Services (Module 4)
+    { title: 'Service Overview', description: 'Overview of company services and offerings', moduleId: 4, order: 1 },
+    { title: 'Internal Procedures', description: 'Internal company procedures and policies', moduleId: 4, order: 2 },
+    
+    // CB – Exports (Module 5)
+    { title: 'Export Fundamentals', description: 'Basic concepts and terminology for exports', moduleId: 5, order: 1 },
+    { title: 'Export Documentation', description: 'Required documents for export operations', moduleId: 5, order: 2 },
+    { title: 'Customs Bonded Export Procedures', description: 'Customs bonded warehouse export procedures', moduleId: 5, order: 3 },
+    
+    // Contracts (Module 6)
+    { title: 'Contract Management', description: 'Contract lifecycle management', moduleId: 6, order: 1 },
+    { title: 'Legal Compliance', description: 'Legal requirements and compliance', moduleId: 6, order: 2 },
+    { title: 'Negotiation Strategies', description: 'Contract negotiation best practices', moduleId: 6, order: 3 },
+    
+    // SEZ (Module 7)
+    { title: 'SEZ Operations', description: 'Special Economic Zone operations', moduleId: 7, order: 1 },
+    { title: 'Compliance Requirements', description: 'SEZ compliance and regulatory requirements', moduleId: 7, order: 2 },
+    
+    // Ops Accounting (Module 8)
+    { title: 'Accounting Procedures', description: 'Operations accounting procedures', moduleId: 8, order: 1 },
+    { title: 'Financial Reporting', description: 'Financial reporting and analysis', moduleId: 8, order: 2 },
+    
+    // Container Movement (Module 9)
+    { title: 'Container Logistics', description: 'Container movement and logistics', moduleId: 9, order: 1 },
+    { title: 'Tracking Systems', description: 'Container tracking and monitoring systems', moduleId: 9, order: 2 },
+    
+    // CRM (Module 10)
+    { title: 'CRM Systems', description: 'Customer relationship management systems', moduleId: 10, order: 1 },
+    { title: 'Customer Management', description: 'Customer data and relationship management', moduleId: 10, order: 2 },
+    
+    // Babaji Transport (Module 11)
+    { title: 'Transport Operations', description: 'Transport and fleet operations', moduleId: 11, order: 1 },
+    { title: 'Fleet Management', description: 'Fleet management and maintenance', moduleId: 11, order: 2 },
+    
+    // Additional Job (Module 12)
+    { title: 'Cross-functional Training', description: 'Additional job responsibilities and training', moduleId: 12, order: 1 },
+    { title: 'Skill Development', description: 'Professional skill development', moduleId: 12, order: 2 },
+    
+    // MIS (Module 13)
+    { title: 'MIS Systems', description: 'Management Information Systems overview', moduleId: 13, order: 1 },
+    { title: 'Data Analysis', description: 'Data analysis and reporting tools', moduleId: 13, order: 2 },
+    
+    // Essential Certificate (Module 14)
+    { title: 'Certification Requirements', description: 'Essential certification requirements', moduleId: 14, order: 1 },
+    { title: 'Documentation Procedures', description: 'Certification documentation procedures', moduleId: 14, order: 2 },
+    
+    // Equipment Hire (Module 15)
+    { title: 'Equipment Rental', description: 'Equipment hire and rental processes', moduleId: 15, order: 1 },
+    { title: 'Maintenance Procedures', description: 'Equipment maintenance and management', moduleId: 15, order: 2 },
+    
+    // Public Notice (Module 16)
+    { title: 'Notice Requirements', description: 'Public notice requirements and procedures', moduleId: 16, order: 1 },
+    { title: 'Communication Protocols', description: 'Public communication protocols', moduleId: 16, order: 2 },
+    
+    // Project (Module 17)
+    { title: 'Project Planning', description: 'Project planning and methodology', moduleId: 17, order: 1 },
+    { title: 'Project Execution', description: 'Project execution and management', moduleId: 17, order: 2 }
   ];
 
   sections.forEach(section => {
@@ -375,6 +524,7 @@ function insertSampleData() {
   `);
 
   const lessons = [
+    // CB - Imports lessons
     {
       title: 'Introduction to Import Management',
       description: 'Overview of import processes and key stakeholders',
@@ -386,7 +536,7 @@ function insertSampleData() {
       documentContent: null
     },
     {
-      title: 'Import Terminology',
+      title: 'Import Terminology and Basics',
       description: 'Key terms and definitions in import management',
       type: 'document',
       duration: '10 min',
@@ -396,14 +546,46 @@ function insertSampleData() {
       documentContent: '<h3>Import Terminology</h3><p>Key terms and definitions used in import management...</p>'
     },
     {
+      title: 'Customs Bonded Warehouse Operations',
+      description: 'Understanding customs bonded warehouse procedures',
+      type: 'document',
+      duration: '20 min',
+      sectionId: 2,
+      order: 1,
+      videoUrl: null,
+      documentContent: '<h3>Customs Bonded Operations</h3><p>Overview of customs bonded warehouse operations and procedures...</p>'
+    },
+    {
       title: 'Import Documentation Requirements',
       description: 'Essential documents for import operations',
       type: 'document',
       duration: '25 min',
-      sectionId: 2,
+      sectionId: 3,
       order: 1,
       videoUrl: null,
       documentContent: '<h3>Required Documents</h3><p>Essential import documents and their purposes...</p>'
+    },
+    
+    // Freight Forwarding lessons
+    {
+      title: 'Introduction to Freight Forwarding',
+      description: 'Overview of freight forwarding operations',
+      type: 'video',
+      duration: '15 min',
+      sectionId: 4,
+      order: 1,
+      videoUrl: 'https://www.youtube.com/embed/example',
+      documentContent: null
+    },
+    {
+      title: 'Freight Documentation Process',
+      description: 'Managing freight forwarding documentation',
+      type: 'document',
+      duration: '20 min',
+      sectionId: 5,
+      order: 1,
+      videoUrl: null,
+      documentContent: '<h3>Freight Documentation</h3><p>Overview of freight forwarding documentation requirements...</p>'
     }
   ];
 
@@ -427,9 +609,9 @@ function insertSampleData() {
   `);
 
   insertAssessment.run(
-    'Import Management Fundamentals Quiz',
-    'Test your understanding of basic import concepts and procedures',
-    1, // Import Management module
+    'CB - Imports Fundamentals Quiz',
+    'Test your understanding of basic customs bonded import concepts and procedures',
+    1, // CB - Imports module
     1, // Import Fundamentals section
     70,
     30,
@@ -541,7 +723,7 @@ export const dbUtils = {
       ORDER BY s.order_index
     `);
     
-    const module = moduleStmt.get(moduleId);
+    const module = moduleStmt.get(moduleId) as any;
     if (module) {
       module.sections = sectionsStmt.all(moduleId);
     }

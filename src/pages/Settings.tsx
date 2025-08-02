@@ -1,7 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createModule, getModules, updateModule } from '../lib/api';
-import { Settings as SettingsIcon, Plus, Edit, Trash2, Save, ChevronDown, ChevronRight, BookOpen, FileText, Shield } from 'lucide-react';
+import { Settings as SettingsIcon, Plus, Edit, Trash2, Save, ChevronDown, ChevronRight, BookOpen, FileText, Shield, Users } from 'lucide-react';
+import RoleMaster from '../components/RoleMaster';
+import { Module as RoleModule } from '../types';
 
 interface Module {
   id: string;
@@ -43,14 +45,74 @@ interface Lesson {
 }
 
 const Settings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'modules' | 'sections' | 'lessons'>('modules');
+  const [activeTab, setActiveTab] = useState<'modules' | 'sections' | 'roles'>('modules');
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
-
   const [showAddForm, setShowAddForm] = useState<string | null>(null);
-
-
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
+
+  // Function to load data from API
+  const checkAPIHealth = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/health');
+      if (!response.ok) {
+        console.warn('API health check returned non-OK status:', response.status);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('API health check failed:', error);
+      // Try alternative ports in case the backend is running on a different port
+      try {
+        const altResponse = await fetch('http://localhost:5001/api/health');
+        if (altResponse.ok) {
+          console.log('Found API on port 5001');
+          return true;
+        }
+      } catch (altError) {
+        console.log('API not available on port 5001 either');
+      }
+      return false;
+    }
+  };
+
+  const loadDataFromAPI = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('🔄 Checking API health...');
+      
+      // Check API health first
+      const healthCheck = await checkAPIHealth();
+      if (!healthCheck) {
+        setError('API Server is not responding. Please check if backend is running.');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('✅ API is healthy, loading data...');
+      
+      const allModules = await getModules();
+      
+      console.log('📊 Modules loaded:', allModules);
+      
+      setModules(allModules);
+      console.log('✅ Data loaded successfully');
+    } catch (err) {
+      console.error('❌ Error loading data:', err);
+      setError('Failed to load data from API server. Please check the server logs for details.');
+      setModules([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load modules and roles on component mount
+  useEffect(() => {
+    loadDataFromAPI();
+  }, []);
 
 
 
@@ -205,7 +267,8 @@ const Settings: React.FC = () => {
         <nav className="flex space-x-8">
           {[
             { id: 'modules', label: 'Module Master', icon: BookOpen },
-            { id: 'sections', label: 'Section Master', icon: FileText }
+            { id: 'sections', label: 'Section Master', icon: FileText },
+            { id: 'roles', label: 'Role Master', icon: Users }
           ].map(tab => {
             const Icon = tab.icon;
             return (
@@ -592,6 +655,29 @@ const Settings: React.FC = () => {
                 Save Section
               </button>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'roles' && (
+          <div className="space-y-6">
+            <RoleMaster 
+              modules={modules.map((m, index) => ({
+                ...m,
+                color: '#3B82F6',
+                estimatedTime: '30 min',  
+                difficulty: 'Intermediate',
+                prerequisites: [],
+                learningObjectives: [],
+                order: index + 1,
+                progress: 0,
+                isLocked: false,
+                completionRate: 0,
+                isCompleted: false
+              })) as unknown as RoleModule[]}
+              loading={loading}
+              error={error}
+              onRefresh={loadDataFromAPI}
+            />
           </div>
         )}
 
