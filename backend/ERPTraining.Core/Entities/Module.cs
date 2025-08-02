@@ -22,4 +22,5 @@ public class Module
     public virtual ICollection<Section> Sections { get; set; } = new List<Section>();
     public virtual ICollection<Assessment> Assessments { get; set; } = new List<Assessment>();
     public virtual ICollection<UserModuleProgress> UserProgress { get; set; } = new List<UserModuleProgress>();
+    public virtual ICollection<RoleModuleSection> RoleModuleSections { get; set; } = new List<RoleModuleSection>();
 }

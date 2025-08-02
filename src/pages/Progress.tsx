@@ -110,8 +110,7 @@ const Progress: React.FC = () => {
                     />
                   </div>
                   
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>{module.category}</span>
+                  <div className="flex justify-end text-xs text-gray-500">
                     <span>{module.estimatedTime}</span>
                   </div>
                 </div>

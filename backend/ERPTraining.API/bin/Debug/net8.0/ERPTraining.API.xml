@@ -1,0 +1,420 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ERPTraining.API</name>
+    </assembly>
+    <members>
+        <member name="T:ERPTraining.API.Controllers.AuthController">
+            <summary>
+            Authentication and authorization controller for user management operations
+            </summary>
+            <remarks>
+            This controller handles all authentication-related operations including user registration, 
+            login, logout, and JWT token management. It provides secure endpoints for user account 
+            management and role-based access control.
+            
+            <para><strong>Available Operations:</strong></para>
+            <list type="bullet">
+            <item><description>User Registration - Create new user accounts</description></item>
+            <item><description>User Login - Authenticate existing users</description></item>
+            <item><description>Profile Management - Update user profile information</description></item>
+            <item><description>JWT Token Management - Handle token-based authentication</description></item>
+            </list>
+            
+            <para><strong>Security:</strong></para>
+            <para>All endpoints use JWT Bearer token authentication except for registration and login.</para>
+            </remarks>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.AuthController.UpdateProfile(ERPTraining.Core.DTOs.UserDto)">
+            <summary>
+            Updates the current user's profile information
+            </summary>
+            <param name="updateDto">User profile data to update</param>
+            <returns>Updated user profile information</returns>
+            <remarks>
+            Updates the authenticated user's profile with the provided information.
+            Only the authenticated user can update their own profile.
+            
+            <para><strong>Required Authentication:</strong> JWT Bearer token</para>
+            <para><strong>Required Role:</strong> Any authenticated user</para>
+            
+            Sample request:
+            
+                PUT /api/auth/me
+                {
+                  "firstName": "John",
+                  "lastName": "Doe",
+                  "email": "john.doe@example.com",
+                  "department": "IT"
+                }
+            
+            </remarks>
+            <response code="200">Profile updated successfully</response>
+            <response code="400">Invalid input data</response>
+            <response code="401">Unauthorized - Invalid or missing token</response>
+            <response code="404">User not found</response>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.AuthController.Login(ERPTraining.Core.DTOs.LoginDto)">
+            <summary>
+            Authenticates a user and returns a JWT token
+            </summary>
+            <param name="loginDto">User login credentials</param>
+            <returns>Authentication response with JWT token and user information</returns>
+            <remarks>
+            Authenticates a user with email and password, returning a JWT token for subsequent API calls.
+            The token should be included in the Authorization header as "Bearer {token}" for protected endpoints.
+            
+            <para><strong>Token Validity:</strong> Tokens are valid for 24 hours</para>
+            <para><strong>Rate Limiting:</strong> Maximum 5 login attempts per minute per IP</para>
+            
+            Sample request:
+            
+                POST /api/auth/login
+                {
+                  "email": "user@example.com",
+                  "password": "SecurePassword123!"
+                }
+            
+            Sample response:
+            
+                {
+                  "success": true,
+                  "message": "Login successful",
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                  "user": {
+                    "id": "123",
+                    "firstName": "John",
+                    "lastName": "Doe",
+                    "email": "user@example.com",
+                    "roles": ["User"]
+                  }
+                }
+            
+            </remarks>
+            <response code="200">Login successful - Returns JWT token and user information</response>
+            <response code="400">Invalid credentials or malformed request</response>
+            <response code="401">Authentication failed - Invalid email or password</response>
+            <response code="429">Too many login attempts - Rate limit exceeded</response>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.AuthController.Register(ERPTraining.Core.DTOs.RegisterDto)">
+            <summary>
+            Registers a new user account
+            </summary>
+            <param name="registerDto">User registration information</param>
+            <returns>Authentication response with JWT token and user information</returns>
+            <remarks>
+            Creates a new user account with the provided information. Upon successful registration,
+            the user is automatically logged in and receives a JWT token for immediate API access.
+            
+            <para><strong>Password Requirements:</strong></para>
+            <list type="bullet">
+            <item><description>Minimum 6 characters</description></item>
+            <item><description>At least one uppercase letter</description></item>
+            <item><description>At least one lowercase letter</description></item>
+            <item><description>At least one digit</description></item>
+            </list>
+            
+            <para><strong>Email Validation:</strong> Email must be unique and in valid format</para>
+            
+            Sample request:
+            
+                POST /api/auth/register
+                {
+                  "firstName": "John",
+                  "lastName": "Doe",
+                  "email": "john.doe@example.com",
+                  "password": "SecurePassword123!",
+                  "confirmPassword": "SecurePassword123!",
+                  "department": "IT"
+                }
+            
+            </remarks>
+            <response code="200">Registration successful - Returns JWT token and user information</response>
+            <response code="400">Registration failed - Invalid data or email/username already exists</response>
+            <response code="422">Validation failed - Password requirements not met</response>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.AuthController.GetCurrentUser">
+            <summary>
+            Gets the current authenticated user's profile information
+            </summary>
+            <returns>Current user's profile data</returns>
+            <remarks>
+            Retrieves the profile information for the currently authenticated user.
+            The user is identified from the JWT token provided in the Authorization header.
+            
+            <para><strong>Required Authentication:</strong> JWT Bearer token</para>
+            <para><strong>Required Role:</strong> Any authenticated user</para>
+            
+            Sample response:
+            
+                {
+                  "id": "123",
+                  "firstName": "John",
+                  "lastName": "Doe",
+                  "email": "john.doe@example.com",
+                  "department": "IT",
+                  "isActive": true,
+                  "joinDate": "2024-01-15T00:00:00Z",
+                  "roles": ["User"]
+                }
+            
+            </remarks>
+            <response code="200">User profile retrieved successfully</response>
+            <response code="401">Unauthorized - Invalid or missing token</response>
+            <response code="404">User not found</response>
+        </member>
+        <member name="T:ERPTraining.API.Controllers.HealthController">
+            <summary>
+            Health check controller for API monitoring
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.HealthController.Get">
+            <summary>
+            Health check endpoint
+            </summary>
+            <returns>Simple health status</returns>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.HealthController.Test">
+            <summary>
+            Test endpoint to verify API connectivity
+            </summary>
+            <returns>Test response</returns>
+        </member>
+        <member name="T:ERPTraining.API.Controllers.ModulesController">
+            <summary>
+            Training modules management controller
+            </summary>
+            <remarks>
+            This controller manages training modules within the ERP Training system. It provides
+            comprehensive CRUD operations for training modules, module progression tracking,
+            and learning objective management.
+            
+            <para><strong>Key Features:</strong></para>
+            <list type="bullet">
+            <item><description>Module Creation and Management</description></item>
+            <item><description>Learning Progress Tracking</description></item>
+            <item><description>Module Content Organization</description></item>
+            <item><description>Prerequisites and Dependencies</description></item>
+            <item><description>Learning Objectives Management</description></item>
+            </list>
+            
+            <para><strong>Available Modules:</strong></para>
+            <para>The system includes comprehensive training modules covering all aspects of ERP systems:</para>
+            <list type="number">
+            <item><description>Data Models &amp; Security</description></item>
+            <item><description>SAP Basics &amp; ERP Fundamentals</description></item>
+            <item><description>Order to Cash Process</description></item>
+            <item><description>Production Planning &amp; Material Management</description></item>
+            <item><description>Finance &amp; Controlling</description></item>
+            <item><description>Sales &amp; Distribution</description></item>
+            <item><description>Project Management &amp; Resource Planning</description></item>
+            <item><description>Workflow &amp; Business Process Management</description></item>
+            <item><description>Integration &amp; System Management</description></item>
+            <item><description>Mobile Solutions &amp; Cloud Integration</description></item>
+            <item><description>Analytics &amp; Business Intelligence</description></item>
+            <item><description>Training Management &amp; Learning Analytics</description></item>
+            </list>
+            
+            <para><strong>Security:</strong></para>
+            <para>All endpoints require JWT Bearer token authentication. Access levels vary by user role.</para>
+            </remarks>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.ModulesController.GetAllModules">
+            <summary>
+            Retrieves all available training modules for the authenticated user
+            </summary>
+            <returns>List of training modules with progress information</returns>
+            <remarks>
+            Returns a comprehensive list of all training modules available to the authenticated user,
+            including their progress status, completion percentage, and access permissions.
+            
+            <para><strong>Returned Data Includes:</strong></para>
+            <list type="bullet">
+            <item><description>Module basic information (ID, title, description)</description></item>
+            <item><description>User progress tracking (completion %, last accessed)</description></item>
+            <item><description>Learning objectives and prerequisites</description></item>
+            <item><description>Estimated duration and difficulty level</description></item>
+            <item><description>Section count and structure</description></item>
+            </list>
+            
+            <para><strong>Module Categories:</strong></para>
+            <para>Modules are organized into comprehensive categories covering:</para>
+            <list type="bullet">
+            <item><description>Foundational ERP concepts and data management</description></item>
+            <item><description>Core business processes (O2C, P2P, R2R)</description></item>
+            <item><description>Advanced functionality and integration</description></item>
+            <item><description>Analytics and reporting capabilities</description></item>
+            </list>
+            
+            Sample response:
+            
+                [
+                  {
+                    "id": 1,
+                    "title": "Data Models &amp; Security",
+                    "description": "Learn fundamental data structures and security concepts...",
+                    "completionPercentage": 75,
+                    "estimatedDuration": "4 hours",
+                    "sectionCount": 52,
+                    "isCompleted": false,
+                    "lastAccessedAt": "2024-07-29T10:30:00Z"
+                  }
+                ]
+            
+            </remarks>
+            <response code="200">Modules retrieved successfully</response>
+            <response code="401">Unauthorized - Invalid or missing token</response>
+            <response code="403">Forbidden - Insufficient permissions</response>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.ModulesController.GetModuleById(System.Int32)">
+            <summary>
+            Retrieves detailed information for a specific training module
+            </summary>
+            <param name="id">The unique identifier of the module</param>
+            <returns>Detailed module information including sections and progress</returns>
+            <remarks>
+            Returns comprehensive details for a specific training module, including all sections,
+            user progress, learning objectives, and prerequisites. This endpoint provides the
+            complete module structure needed for the learning interface.
+            
+            <para><strong>Detailed Information Includes:</strong></para>
+            <list type="bullet">
+            <item><description>Complete module metadata and structure</description></item>
+            <item><description>All sections with content organization</description></item>
+            <item><description>User-specific progress and completion status</description></item>
+            <item><description>Learning objectives and outcomes</description></item>
+            <item><description>Prerequisites and recommended preparation</description></item>
+            <item><description>Assessment information and requirements</description></item>
+            </list>
+            
+            <para><strong>Progress Tracking:</strong></para>
+            <para>The response includes detailed progress information:</para>
+            <list type="bullet">
+            <item><description>Overall module completion percentage</description></item>
+            <item><description>Section-by-section progress status</description></item>
+            <item><description>Time spent in module and sections</description></item>
+            <item><description>Last accessed timestamps</description></item>
+            </list>
+            
+            Sample response:
+            
+                {
+                  "id": 1,
+                  "title": "Data Models &amp; Security",
+                  "description": "Comprehensive training on data structures...",
+                  "completionPercentage": 75,
+                  "sections": [
+                    {
+                      "id": 1,
+                      "title": "Introduction to Data Models",
+                      "order": 1,
+                      "isCompleted": true
+                    }
+                  ],
+                  "learningObjectives": ["Understand data structures", "..."],
+                  "prerequisites": ["Basic computer knowledge"]
+                }
+            
+            </remarks>
+            <response code="200">Module details retrieved successfully</response>
+            <response code="401">Unauthorized - Invalid or missing token</response>
+            <response code="404">Module not found or access denied</response>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.ModulesController.GetModulesForPermissions">
+            <summary>
+            Get modules formatted for permission assignment
+            </summary>
+            <returns>Modules with sections for role permission management</returns>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.RoleAccessController.GetAllRoleAccess">
+            <summary>
+            Get all role access mappings
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.RoleAccessController.GetRoleAccessByRoleId(System.String)">
+            <summary>
+            Get role access by role ID
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.RoleAccessController.GetModulesWithSectionsForRole(System.String)">
+            <summary>
+            Get modules with sections and access status for a specific role
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.RoleAccessController.GetRolesWithAccess">
+            <summary>
+            Get all roles with their access summary
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.RoleAccessController.UpdateRoleAccess(System.String,ERPTraining.Core.DTOs.UpdateRoleAccessDto)">
+            <summary>
+            Update role access for a specific role
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.RoleAccessController.BulkUpdateRoleAccess(System.Collections.Generic.List{ERPTraining.Core.DTOs.BulkRoleAccessDto})">
+            <summary>
+            Bulk update role access for multiple roles
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.RoleAccessController.CheckAccess(System.String,System.Int32,System.Int32)">
+            <summary>
+            Check if a user has access to a specific section
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.RoleAccessController.GetAllRoles">
+            <summary>
+            Get all roles - temporary for testing
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.RoleAccessController.TestSimpleInsert">
+            <summary>
+            Test sections - temporary for testing
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.RoleAccessController.SeedRoleModuleSectionData">
+            <summary>
+            Seed role module section data from the provided mapping
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.RoleAccessController.SeedOperationsSeaRole">
+            <summary>
+            Manually seed Operations-Sea role with specific permissions
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.SectionsController.GetAllSections">
+            <summary>
+            Get all sections
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.SectionsController.GetSectionsByModule(System.Int32)">
+            <summary>
+            Get sections by module ID
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.SectionsController.GetSectionById(System.Int32)">
+            <summary>
+            Get section by ID
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.SectionsController.CreateSection(ERPTraining.Core.DTOs.CreateSectionDto)">
+            <summary>
+            Create a new section
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.SectionsController.UpdateSection(System.Int32,ERPTraining.Core.DTOs.UpdateSectionDto)">
+            <summary>
+            Update an existing section
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.SectionsController.DeleteSection(System.Int32)">
+            <summary>
+            Delete a section
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.SectionsController.SectionExists(System.Int32)">
+            <summary>
+            Check if section exists
+            </summary>
+        </member>
+    </members>
+</doc>

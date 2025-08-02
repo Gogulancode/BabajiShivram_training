@@ -19,7 +19,6 @@ const TopNavbar: React.FC = () => {
 
   const notifications = [
     { id: 1, message: 'New training module available', time: '5 min ago' },
-    { id: 2, message: 'Your Import Management progress updated', time: '1 hour ago' },
     { id: 3, message: 'System maintenance scheduled', time: '2 hours ago' }
   ];
 

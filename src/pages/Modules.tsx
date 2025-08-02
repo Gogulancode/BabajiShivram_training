@@ -11,7 +11,20 @@ import {
   Archive,
   Clock,
   CheckCircle,
-  File
+  File,
+  Download,
+  Upload,
+  Container,
+  Building,
+  FileText,
+  Globe,
+  Calculator,
+  Move,
+  Plus,
+  Award,
+  Settings,
+  Bell,
+  FolderOpen
 } from 'lucide-react';
 import { getModules } from '../lib/api';
 
@@ -24,7 +37,20 @@ const iconMap = {
   Users,
   Ship,
   Archive,
-  File
+  File,
+  Download,
+  Upload,
+  Container,
+  Building,
+  FileText,
+  Globe,
+  Calculator,
+  Move,
+  Plus,
+  Award,
+  Settings,
+  Bell,
+  FolderOpen
 };
 
 const ModulesPage: React.FC = () => {
@@ -87,13 +113,12 @@ const ModulesPage: React.FC = () => {
           const moduleLink = `/modules/${module.id}`;
 
           return (
-            <Link
-              to={moduleLink}
+            <div
               key={module.id}
-              className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer group"
+              className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                <div className="p-3 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors">
                   <IconComponent className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="flex items-center space-x-2">
@@ -118,7 +143,7 @@ const ModulesPage: React.FC = () => {
                 </div>
               </div>
 
-              <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+              <h3 className="font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
                 {module.title}
               </h3>
               <p className="text-sm text-gray-600 mb-4 line-clamp-2">{module.description}</p>
@@ -147,14 +172,25 @@ const ModulesPage: React.FC = () => {
                 </div>
               </div>
 
-              <button className="w-full mt-4 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
-                {module.progress >= 100
-                  ? 'Review'
-                  : module.progress > 0
-                  ? 'Continue'
-                  : 'Start'}
-              </button>
-            </Link>
+              <div className="mt-4 space-y-2">
+                <Link
+                  to={moduleLink}
+                  className="w-full block px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-center"
+                >
+                  {module.progress >= 100
+                    ? 'Review'
+                    : module.progress > 0
+                    ? 'Continue'
+                    : 'Start'}
+                </Link>
+                <Link
+                  to={`/modules/${module.id}/sections`}
+                  className="w-full block px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors text-center"
+                >
+                  View Sections
+                </Link>
+              </div>
+            </div>
           );
         })}
       </div>

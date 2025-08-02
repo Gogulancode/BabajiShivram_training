@@ -16,4 +16,5 @@ public class Section
     public virtual Module Module { get; set; } = null!;
     public virtual ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
     public virtual ICollection<Assessment> Assessments { get; set; } = new List<Assessment>();
+    public virtual ICollection<RoleModuleSection> RoleModuleSections { get; set; } = new List<RoleModuleSection>();
 }

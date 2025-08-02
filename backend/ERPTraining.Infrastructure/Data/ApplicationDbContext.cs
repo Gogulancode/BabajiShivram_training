@@ -21,6 +21,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<UserModuleProgress> UserModuleProgress { get; set; }
     public DbSet<UserLessonProgress> UserLessonProgress { get; set; }
     public DbSet<UploadedContent> UploadedContents { get; set; }
+    public DbSet<RoleModuleAccess> RoleModuleAccess { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -172,6 +173,19 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .HasForeignKey(uc => uc.UploadedById)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Configure RoleModuleAccess relationships
+        builder.Entity<RoleModuleAccess>()
+            .HasOne(rma => rma.Module)
+            .WithMany()
+            .HasForeignKey(rma => rma.ModuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<RoleModuleAccess>()
+            .HasOne(rma => rma.Section)
+            .WithMany()
+            .HasForeignKey(rma => rma.SectionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // Configure indexes
         builder.Entity<Module>()
             .HasIndex(m => m.Order);
@@ -192,5 +206,14 @@ public class ApplicationDbContext : IdentityDbContext<User>
         builder.Entity<UserLessonProgress>()
             .HasIndex(ulp => new { ulp.UserId, ulp.LessonId })
             .IsUnique();
+
+        builder.Entity<RoleModuleAccess>()
+            .HasIndex(rma => new { rma.RoleId, rma.ModuleId, rma.SectionId });
+
+        builder.Entity<RoleModuleAccess>()
+            .HasIndex(rma => rma.ErpRoleId);
+
+        builder.Entity<RoleModuleAccess>()
+            .HasIndex(rma => rma.ErpModuleId);
     }
 }

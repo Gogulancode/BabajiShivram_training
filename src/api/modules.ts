@@ -41,23 +41,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(403).json({ error: 'Insufficient permissions' });
       }
 
-      const { title, description, icon, category, estimatedTime, difficulty, prerequisites, learningObjectives, orderIndex } = req.body;
+      const { title, description, icon, estimatedTime, difficulty, prerequisites, learningObjectives, orderIndex } = req.body;
       
-      if (!title || !description || !icon || !category) {
+      if (!title || !description || !icon) {
         return res.status(400).json({ error: 'Required fields missing' });
       }
 
       const { db } = await import('../lib/database');
       const stmt = db.prepare(`
-        INSERT INTO modules (title, description, icon, category, estimated_time, difficulty, prerequisites, learning_objectives, order_index)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO modules (title, description, icon, estimated_time, difficulty, prerequisites, learning_objectives, order_index)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       const result = stmt.run(
         title,
         description,
         icon,
-        category,
         estimatedTime || '1 hour',
         difficulty || 'Beginner',
         JSON.stringify(prerequisites || []),

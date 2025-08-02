@@ -305,6 +305,59 @@ namespace ERPTraining.Infrastructure.Migrations
                     b.ToTable("Questions");
                 });
 
+            modelBuilder.Entity("ERPTraining.Core.Entities.RoleModuleAccess", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErpModuleId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ErpRoleId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ErpSectionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ModuleId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("SectionId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ErpModuleId");
+
+                    b.HasIndex("ErpRoleId");
+
+                    b.HasIndex("ModuleId");
+
+                    b.HasIndex("SectionId");
+
+                    b.HasIndex("RoleId", "ModuleId", "SectionId")
+                        .IsUnique()
+                        .HasFilter("[SectionId] IS NOT NULL");
+
+                    b.ToTable("RoleModuleAccess");
+                });
+
             modelBuilder.Entity("ERPTraining.Core.Entities.Section", b =>
                 {
                     b.Property<int>("Id")
@@ -833,6 +886,24 @@ namespace ERPTraining.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Assessment");
+                });
+
+            modelBuilder.Entity("ERPTraining.Core.Entities.RoleModuleAccess", b =>
+                {
+                    b.HasOne("ERPTraining.Core.Entities.Module", "Module")
+                        .WithMany()
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ERPTraining.Core.Entities.Section", "Section")
+                        .WithMany()
+                        .HasForeignKey("SectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Module");
+
+                    b.Navigation("Section");
                 });
 
             modelBuilder.Entity("ERPTraining.Core.Entities.Section", b =>

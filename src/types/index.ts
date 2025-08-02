@@ -13,16 +13,29 @@ export interface Module {
   description: string;
   icon: string;
   category: string;
+  color: string;
+  estimatedTime: string;
+  difficulty: string;
+  prerequisites: string[];
+  learningObjectives: string[];
+  isActive: boolean;
+  order: number;
+  erpModuleId?: string;
+  progress: number;
+  isLocked: boolean;
+  sections?: Section[];
   completionRate: number;
   isCompleted: boolean;
-  estimatedTime: string;
-  sections?: Section[];
 }
 
 export interface Section {
   id: string;
   title: string;
   description: string;
+  moduleId: string;
+  order: number;
+  isActive: boolean;
+  erpSectionId?: string;
   lessons: Lesson[];
 }
 
@@ -102,4 +115,46 @@ export interface ProgressData {
   completedModules: number;
   overallProgress: number;
   recentActivity: string[];
+}
+
+// Role Management Types
+export interface Role {
+  id: string;
+  name: string;
+  description?: string;
+  originalRoleId?: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  permissions: Permission[];
+}
+
+export interface Permission {
+  id: string;
+  roleId: string;
+  moduleId: string;
+  sectionId?: string;
+  moduleName: string;
+  sectionName?: string;
+  erpRoleId?: string;
+  erpModuleId?: string;
+  erpSectionId?: string;
+  isActive: boolean;
+}
+
+export interface RoleFilter {
+  search: string;
+  isActive?: boolean;
+  hasModuleAccess?: boolean;
+  page: number;
+  pageSize: number;
+  sortBy: 'name' | 'createdAt' | 'permissions';
+  sortOrder: 'asc' | 'desc';
+}
+
+export interface RoleStats {
+  totalRoles: number;
+  activeRoles: number;
+  totalPermissions: number;
+  rolesWithoutPermissions: number;
 }
