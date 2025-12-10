@@ -129,6 +129,9 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<SlaEscalationContact> SlaEscalationContacts { get; set; }
     public DbSet<SlaEscalationLevel> SlaEscalationLevels { get; set; }
 
+    // Quick Templates
+    public DbSet<QuickTemplate> QuickTemplates { get; set; }
+
     // Notification entities
     public DbSet<UserNotification> UserNotifications { get; set; }
 

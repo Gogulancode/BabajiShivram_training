@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { API_CONFIG } from '@/config/api';
 
 interface EndpointStatus {
   name: string;
@@ -143,7 +144,7 @@ const StatusCheck: React.FC = () => {
             Clear Storage & Reload
           </button>
           <button 
-            onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5015'}/swagger`, '_blank')} 
+            onClick={() => window.open(`${API_CONFIG.BASE_URL.replace('/api', '')}/swagger`, '_blank')} 
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
           >
             Open API Docs

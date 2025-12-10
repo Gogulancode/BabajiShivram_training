@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   PlusIcon,
   PencilIcon,
@@ -6,6 +6,7 @@ import {
   ClockIcon,
   UserGroupIcon,
   XMarkIcon,
+  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -22,6 +23,18 @@ import {
 } from '../../hooks/useAdvancedSettings';
 import { settingsApi } from '../../api/settingsApi';
 import type { SlaPolicyDto, SlaEscalationContactDto } from '../../api/settingsApi';
+import { debounce } from 'lodash';
+
+// User search result type
+interface UserSearchResult {
+  id: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  department: string;
+  position: string;
+}
 
 // Form validation schema
 const slaPolicySchema = yup.object({
@@ -72,6 +85,58 @@ const SlaTab: React.FC = () => {
     contactEmail: '',
     isActive: true
   });
+
+  // User search state
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>([]);
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [isManualEntry, setIsManualEntry] = useState(false);
+
+  // Debounced user search function
+  const searchUsers = useCallback(
+    debounce(async (query: string) => {
+      if (query.length < 2) {
+        setUserSearchResults([]);
+        setShowUserDropdown(false);
+        return;
+      }
+      
+      setIsSearchingUsers(true);
+      try {
+        const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}&limit=10`);
+        if (response.ok) {
+          const results = await response.json();
+          setUserSearchResults(results);
+          setShowUserDropdown(results.length > 0);
+        }
+      } catch (error) {
+        console.error('Error searching users:', error);
+      } finally {
+        setIsSearchingUsers(false);
+      }
+    }, 300),
+    []
+  );
+
+  // Handle user selection from dropdown
+  const handleUserSelect = (user: UserSearchResult) => {
+    setContactForm(prev => ({
+      ...prev,
+      contactName: user.name.trim(),
+      contactEmail: user.email
+    }));
+    setUserSearchQuery(user.name.trim());
+    setShowUserDropdown(false);
+    setIsManualEntry(false);
+  };
+
+  // Handle manual entry toggle
+  const handleSwitchToManualEntry = () => {
+    setIsManualEntry(true);
+    setShowUserDropdown(false);
+    setUserSearchResults([]);
+  };
 
   // React Query hooks
   const { data: slaPolicies = [], isLoading: loadingPolicies } = useSlaPolicies(showInactivePolicies);
@@ -778,6 +843,10 @@ const SlaTab: React.FC = () => {
                   onClick={() => {
                     setIsContactModalOpen(false);
                     setEditingContact(null);
+                    setUserSearchQuery('');
+                    setUserSearchResults([]);
+                    setShowUserDropdown(false);
+                    setIsManualEntry(false);
                   }}
                   className="text-gray-400 hover:text-gray-600"
                 >
@@ -822,23 +891,86 @@ const SlaTab: React.FC = () => {
                   </select>
                 </div>
 
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Contact Name
+                    {!isManualEntry && (
+                      <span className="text-xs text-gray-500 ml-2">(Search users or <button type="button" onClick={handleSwitchToManualEntry} className="text-blue-600 hover:underline">enter manually</button>)</span>
+                    )}
+                    {isManualEntry && (
+                      <span className="text-xs text-gray-500 ml-2">(<button type="button" onClick={() => setIsManualEntry(false)} className="text-blue-600 hover:underline">search users</button>)</span>
+                    )}
                   </label>
-                  <input
-                    type="text"
-                    value={contactForm.contactName}
-                    onChange={(e) => handleContactInputChange('contactName', e.target.value)}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter contact name"
-                  />
+                  {!isManualEntry ? (
+                    <div className="relative">
+                      <div className="relative">
+                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="text"
+                          value={userSearchQuery}
+                          onChange={(e) => {
+                            const query = e.target.value;
+                            setUserSearchQuery(query);
+                            setContactForm(prev => ({ ...prev, contactName: query }));
+                            searchUsers(query);
+                          }}
+                          onFocus={() => {
+                            if (userSearchResults.length > 0) {
+                              setShowUserDropdown(true);
+                            }
+                          }}
+                          className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Search by name or email..."
+                          autoComplete="off"
+                        />
+                        {isSearchingUsers && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* User search dropdown */}
+                      {showUserDropdown && userSearchResults.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                          {userSearchResults.map((user) => (
+                            <button
+                              key={user.id}
+                              type="button"
+                              onClick={() => handleUserSelect(user)}
+                              className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                            >
+                              <div className="font-medium text-sm text-gray-900">{user.name}</div>
+                              <div className="text-xs text-gray-500">{user.email}</div>
+                              {user.department && (
+                                <div className="text-xs text-gray-400">{user.department} {user.position && `• ${user.position}`}</div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      value={contactForm.contactName}
+                      onChange={(e) => handleContactInputChange('contactName', e.target.value)}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter contact name"
+                    />
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Email Address
+                    {!isManualEntry && contactForm.contactEmail && (
+                      <span className="text-xs text-green-600 ml-2">✓ Auto-filled from user</span>
+                    )}
                   </label>
                   <input
                     type="email"
@@ -863,6 +995,10 @@ const SlaTab: React.FC = () => {
                         contactEmail: '',
                         isActive: true
                       });
+                      setUserSearchQuery('');
+                      setUserSearchResults([]);
+                      setShowUserDropdown(false);
+                      setIsManualEntry(false);
                     }}
                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
                   >

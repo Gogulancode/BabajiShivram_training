@@ -4,6 +4,7 @@ import {
   UserCheck, RefreshCw 
 } from 'lucide-react';
 import AdminRouteGuard from '../components/AdminRouteGuard';
+import { API_CONFIG } from '@/config/api';
 
 // Helper function to get auth headers
 const getAuthHeaders = (): Record<string, string> => {
@@ -128,7 +129,7 @@ const UserManagementPage: React.FC = () => {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5015/api'}/users?${params.toString()}`,
+        `${API_CONFIG.BASE_URL}/users?${params.toString()}`,
         {
           headers: {
             ...getAuthHeaders(),
@@ -208,7 +209,7 @@ const UserManagementPage: React.FC = () => {
   const loadAgents = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5015/api'}/tickets/settings/agents`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/tickets/settings/agents`, {
         headers: getAuthHeaders()
       });
       if (response.ok) {
@@ -282,7 +283,7 @@ const UserManagementPage: React.FC = () => {
     setLoading(true);
     try {
       // API call via proxy to backend server
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5015/api'}/users`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/users`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -331,7 +332,7 @@ const UserManagementPage: React.FC = () => {
     setLoading(true);
     try {
       // API call to backend server for agent conversion
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5015/api'}/ticketing/acl/convert-to-agent/${userId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/ticketing/acl/convert-to-agent/${userId}`, {
         method: 'POST',
         headers: getAuthHeaders(),
       });
@@ -356,7 +357,7 @@ const UserManagementPage: React.FC = () => {
     setLoading(true);
     try {
       // API call via proxy to backend server for user status toggle
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5015/api'}/users/${userId}/status`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/users/${userId}/status`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify({ isActive: !currentStatus }),
@@ -405,7 +406,7 @@ const UserManagementPage: React.FC = () => {
       console.log('🔄 Updating user:', editingUser.id);
       console.log('📝 Update data:', editUserForm);
       
-      const apiUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5015/api'}/users/${editingUser.id}`;
+      const apiUrl = `${API_CONFIG.BASE_URL}/users/${editingUser.id}`;
       console.log('🌐 API URL:', apiUrl);
 
       const response = await fetch(apiUrl, {
@@ -476,7 +477,7 @@ const UserManagementPage: React.FC = () => {
     setLoading(true);
     try {
       // API call via proxy to backend server for agent status toggle
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5015/api'}/tickets/settings/agents/${agentId}/status`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/tickets/settings/agents/${agentId}/status`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify({ isActive: !currentStatus }),

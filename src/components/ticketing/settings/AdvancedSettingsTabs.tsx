@@ -9,8 +9,10 @@ import {
   ListBulletIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  ClockIcon
+  ClockIcon,
+  BoltIcon
 } from '@heroicons/react/24/outline';
+import { API_CONFIG } from '@/config/api';
 
 // Tab Components (will be created separately)
 import TagsTab from '@components/ticketing/settings/tabs/TagsTab';
@@ -18,6 +20,7 @@ import EmailConfigTab from '@components/ticketing/settings/tabs/EmailConfigTab';
 import CustomFieldsTab from '@components/ticketing/settings/tabs/CustomFieldsTab';
 import GroupsTab from '@components/ticketing/settings/tabs/GroupsTab';
 import SlaTab from '@components/Settings/SlaTab';
+import QuickTemplatesTab from '@components/ticketing/settings/tabs/QuickTemplatesTab';
 
 // Existing components
 import CategoriesTab from '@components/ticketing/settings/tabs/CategoriesTab';
@@ -34,7 +37,8 @@ export type SettingsTab =
   | 'email-config'
   | 'ticket-fields'
   | 'groups'
-  | 'sla';
+  | 'sla'
+  | 'quick-templates';
 
 interface TabConfig {
   id: SettingsTab;
@@ -81,7 +85,6 @@ const tabConfigs: TabConfig[] = [
     description: 'Manage ticket tags for better organization',
     icon: TagIcon,
     component: TagsTab,
-    isNew: true,
   },
   {
     id: 'email-config',
@@ -89,7 +92,6 @@ const tabConfigs: TabConfig[] = [
     description: 'Configure Microsoft Graph email processing',
     icon: AtSymbolIcon,
     component: EmailConfigTab,
-    isNew: true,
   },
   {
     id: 'ticket-fields',
@@ -97,7 +99,6 @@ const tabConfigs: TabConfig[] = [
     description: 'Create dynamic form fields for tickets',
     icon: DocumentIcon,
     component: CustomFieldsTab,
-    isNew: true,
   },
   {
     id: 'groups',
@@ -105,7 +106,6 @@ const tabConfigs: TabConfig[] = [
     description: 'Manage agent groups and assignments',
     icon: UserGroupIcon,
     component: GroupsTab,
-    isNew: true,
   },
   {
     id: 'sla',
@@ -113,7 +113,13 @@ const tabConfigs: TabConfig[] = [
     description: 'Configure SLA targets and escalation rules',
     icon: ClockIcon,
     component: SlaTab,
-    isNew: true,
+  },
+  {
+    id: 'quick-templates',
+    name: 'Quick Templates',
+    description: 'Manage quick start templates for ticket creation',
+    icon: BoltIcon,
+    component: QuickTemplatesTab,
   },
 ];
 
@@ -146,9 +152,6 @@ const AdvancedSettingsTabs: React.FC<AdvancedSettingsTabsProps> = ({
           <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
               Production Ready
-            </span>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              {tabConfigs.filter(t => t.isNew).length} New Features
             </span>
           </div>
         </div>
@@ -248,7 +251,7 @@ const AdvancedSettingsTabs: React.FC<AdvancedSettingsTabsProps> = ({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <a 
-              href={`${import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5015'}/swagger`} 
+              href={`${API_CONFIG.BASE_URL.replace('/api', '')}/swagger`} 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-500 font-medium"

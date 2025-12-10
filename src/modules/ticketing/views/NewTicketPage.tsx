@@ -1,10 +1,27 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, AlertCircle, Paperclip, X, Zap, Bug, HelpCircle, CheckCircle, Users, DollarSign, Megaphone, FileText } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle, Paperclip, X, Zap, Bug, HelpCircle, CheckCircle, Users, DollarSign, Megaphone, FileText, Image, Briefcase, Settings, Mail, Phone, Calendar, Clock, Globe, Shield, Database, Server, Wifi, Monitor, Printer, Headphones, MessageSquare, BookOpen, Award, Target, TrendingUp, PieChart, BarChart, Activity, Heart, Star, Flag, Bookmark, Tag, Folder, Archive, Trash, Edit, Copy, Link, ExternalLink, Download, Upload, Share, Lock, Unlock, Eye, EyeOff, Bell, BellOff, Search, Filter, List, Grid, Layers, Package, Box, Gift, Truck, MapPin, Navigation, Compass, Map, Home, Building, Store, ShoppingCart, CreditCard, Wallet, Receipt, FileCheck, FilePlus, FileSearch, FileMinus, FileWarning, FileX, LucideIcon } from 'lucide-react';
 import { ticketsApi, TicketPriority, TicketCategory, TicketCustomFieldValues, CustomFieldPrimitive } from '../services/ticketsApi';
-import { settingsApi, Department, TicketCategoryConfig, SubCategory, PriorityLevel, TicketStatusConfig, CustomField } from '../../../shared/services/api/settingsApi';
-import { useQuery } from '@tanstack/react-query';
+import { settingsApi, Department, TicketCategoryConfig, SubCategory, PriorityLevel, TicketStatusConfig, CustomField, QuickTemplate } from '../../../shared/services/api/settingsApi';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AuthService from '../../../shared/services/api/auth';
+
+// Icon mapping for dynamic template icons
+const iconMap: Record<string, LucideIcon> = {
+  Bug, Zap, HelpCircle, CheckCircle, Users, DollarSign, Megaphone, FileText, Image, Briefcase, 
+  Settings, Mail, Phone, Calendar, Clock, Globe, Shield, Database, Server, Wifi, Monitor, 
+  Printer, Headphones, MessageSquare, BookOpen, Award, Target, TrendingUp, PieChart, BarChart,
+  Activity, Heart, Star, Flag, Bookmark, Tag, Folder, Archive, Trash, Edit, Copy, Link,
+  ExternalLink, Download, Upload, Share, Lock, Unlock, Eye, EyeOff, Bell, BellOff, Search,
+  Filter, List, Grid, Layers, Package, Box, Gift, Truck, MapPin, Navigation, Compass, Map,
+  Home, Building, Store, ShoppingCart, CreditCard, Wallet, Receipt, FileCheck, FilePlus,
+  FileSearch, FileMinus, FileWarning, FileX, AlertCircle, Paperclip, X, Save, ArrowLeft
+};
+
+// Helper function to get icon component from string name
+const getIconComponent = (iconName: string): LucideIcon => {
+  return iconMap[iconName] || FileText;
+};
 
 type TicketFormData = {
   title: string;
@@ -34,6 +51,26 @@ const mapCategoryToEnum = (categoryId: string): TicketCategory => {
   }
 };
 
+// Helper function to map priority name to backend enum value
+const mapPriorityNameToEnum = (priorityName: string): TicketPriority => {
+  const normalizedName = priorityName.toLowerCase().trim();
+  switch (normalizedName) {
+    case 'low':
+    case 'very low':
+      return TicketPriority.Low;
+    case 'medium':
+    case 'normal':
+      return TicketPriority.Medium;
+    case 'high':
+      return TicketPriority.High;
+    case 'critical':
+    case 'urgent':
+      return TicketPriority.Critical;
+    default:
+      return TicketPriority.Medium;
+  }
+};
+
 const sortByOrder = <T extends { order?: number; name?: string }>(items: T[]): T[] => {
   return [...items].sort((a, b) => {
     const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
@@ -55,6 +92,7 @@ const sortByOrder = <T extends { order?: number; name?: string }>(items: T[]): T
 
 const NewTicketPage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,94 +137,12 @@ const NewTicketPage: React.FC = () => {
     [customFields]
   );
 
-  // Quick action templates
-  const quickActions = [
-    // IT Department
-    { 
-      icon: Bug, 
-      label: 'IT - Bug Report', 
-      title: 'Bug Report: ',
-      description: 'I encountered a bug with the following:\n\n• What happened:\n• Expected behavior:\n• Steps to reproduce:\n1. \n2. \n3. \n\n• Browser/System info:',
-      category: 'bug-report',
-      priority: TicketPriority.High
-    },
-    { 
-      icon: Zap, 
-      label: 'IT - Technical Issue', 
-      title: 'Technical Support: ',
-      description: 'I need technical assistance with:\n\n• Issue description:\n• Error messages (if any):\n• When did this start:\n• What I\'ve tried:',
-      category: 'technical-support',
-      priority: TicketPriority.Medium
-    },
-    // HR Department
-    { 
-      icon: Users, 
-      label: 'HR - Leave Request', 
-      title: 'Leave Request: ',
-      description: 'I would like to request leave for:\n\n• Leave type (Annual/Sick/Personal):\n• Start date:\n• End date:\n• Number of days:\n• Reason:\n• Contact during leave:',
-      category: 'general-inquiry',
-      priority: TicketPriority.Low
-    },
-    { 
-      icon: Users, 
-      label: 'HR - Payroll Issue', 
-      title: 'Payroll Inquiry: ',
-      description: 'I have a payroll-related issue:\n\n• Issue description:\n• Pay period affected:\n• Expected amount vs received:\n• Supporting documents attached:',
-      category: 'general-inquiry',
-      priority: TicketPriority.High
-    },
-    // Accounts/Finance Department
-    { 
-      icon: DollarSign, 
-      label: 'Finance - Expense Claim', 
-      title: 'Expense Reimbursement: ',
-      description: 'I would like to claim reimbursement for:\n\n• Expense type:\n• Amount:\n• Date incurred:\n• Business purpose:\n• Receipts attached:',
-      category: 'general-inquiry',
-      priority: TicketPriority.Medium
-    },
-    { 
-      icon: DollarSign, 
-      label: 'Finance - Invoice Query', 
-      title: 'Invoice Inquiry: ',
-      description: 'I have a question about an invoice:\n\n• Invoice number:\n• Vendor/Client name:\n• Issue description:\n• Amount in question:\n• Required action:',
-      category: 'general-inquiry',
-      priority: TicketPriority.Medium
-    },
-    // Marketing Department
-    { 
-      icon: Megaphone, 
-      label: 'Marketing - Campaign Request', 
-      title: 'Marketing Campaign: ',
-      description: 'I would like to request marketing support for:\n\n• Campaign objective:\n• Target audience:\n• Timeline:\n• Budget (if applicable):\n• Required deliverables:\n• Success metrics:',
-      category: 'feature-request',
-      priority: TicketPriority.Low
-    },
-    { 
-      icon: Megaphone, 
-      label: 'Marketing - Design Request', 
-      title: 'Design/Creative Request: ',
-      description: 'I need design/creative support for:\n\n• Type (Banner/Poster/Social media/Email):\n• Purpose:\n• Deadline:\n• Dimensions/Specifications:\n• Brand guidelines:\n• Reference materials:',
-      category: 'feature-request',
-      priority: TicketPriority.Medium
-    },
-    // General
-    { 
-      icon: FileText, 
-      label: 'General - Document Request', 
-      title: 'Document Request: ',
-      description: 'I need the following document(s):\n\n• Document type:\n• Purpose:\n• Required by (date):\n• Delivery format (PDF/Word/Email):\n• Additional notes:',
-      category: 'general-inquiry',
-      priority: TicketPriority.Low
-    },
-    { 
-      icon: HelpCircle, 
-      label: 'General - Question', 
-      title: 'General Inquiry: ',
-      description: 'I have a question about:\n\n• Department/Topic:\n• Specific question:\n• Context or background:\n• Urgency level:',
-      category: 'general-inquiry',
-      priority: TicketPriority.Low
-    }
-  ];
+  // Query for quick templates from API
+  const { data: quickTemplates = [], isLoading: templatesLoading } = useQuery({
+    queryKey: ['quickTemplates'],
+    queryFn: () => settingsApi.getQuickTemplates(false),
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
 
   // Load settings data on component mount
   useEffect(() => {
@@ -305,6 +261,10 @@ const NewTicketPage: React.FC = () => {
       
       await ticketsApi.createTicket(ticketData);
       
+      // Invalidate the my-tickets cache to ensure fresh data is fetched
+      await queryClient.invalidateQueries({ queryKey: ['my-tickets'] });
+      await queryClient.invalidateQueries({ queryKey: ['tickets'] });
+      
       navigate('/tickets/my');
     } catch (err) {
       setError('Failed to create ticket. Please try again.');
@@ -359,26 +319,44 @@ const NewTicketPage: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleQuickAction = (action: typeof quickActions[0]) => {
-    setFormData(prev => ({
-      ...prev,
+  // Type for quick action
+  type QuickActionType = {
+    icon: LucideIcon;
+    label: string;
+    title: string;
+    description: string;
+    category: string;
+    priority: TicketPriority;
+    categoryId?: number;
+  };
+
+  const handleQuickAction = (action: QuickActionType) => {
+    // Start building the new form data
+    const newFormData: Partial<TicketFormData> = {
       title: action.title,
       description: action.description,
       priority: action.priority,
-    }));
-    
-    // Try to find matching category by name pattern
-    const matchingCategory = categories.find(cat => 
-      cat.name.toLowerCase().includes(action.category) ||
-      action.category.includes(cat.name.toLowerCase())
-    );
-    
-    if (matchingCategory) {
-      setFormData(prev => ({
-        ...prev,
-        categoryId: matchingCategory.id.toString(),
-      }));
+    };
+
+    // If template has specific categoryId, use it directly
+    if (action.categoryId) {
+      newFormData.categoryId = action.categoryId.toString();
+    } else {
+      // Fall back to matching category by name pattern
+      const matchingCategory = categories.find(cat => 
+        cat.name.toLowerCase().includes(action.category) ||
+        action.category.includes(cat.name.toLowerCase())
+      );
+      
+      if (matchingCategory) {
+        newFormData.categoryId = matchingCategory.id.toString();
+      }
     }
+
+    setFormData(prev => ({
+      ...prev,
+      ...newFormData,
+    }));
   };
 
   // Handle custom field value changes
@@ -592,23 +570,64 @@ const NewTicketPage: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="space-y-sm">
             {/* Quick Actions */}
-            <div className="bg-blue-50 rounded-lg p-sm space-y-sm">
-              <h2 className="text-lg font-semibold leading-tight text-gray-900">Quick Start Templates</h2>
-              <p className="text-sm text-gray-600">Choose a template to get started quickly, or create from scratch below.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {quickActions.map((action, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => handleQuickAction(action)}
-                    className="flex items-center space-x-2 p-3 bg-white border border-blue-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors text-left"
-                  >
-                    <action.icon className="h-5 w-5 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-900">{action.label}</span>
-                  </button>
-                ))}
+            {quickTemplates.length > 0 && (
+              <div className="bg-blue-50 rounded-lg p-sm space-y-sm">
+                <h2 className="text-lg font-semibold leading-tight text-gray-900">Quick Start Templates</h2>
+                <p className="text-sm text-gray-600">Choose a template to get started quickly, or create from scratch below.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {quickTemplates.map((template) => {
+                    const IconComponent = getIconComponent(template.iconName);
+                    // Find category name for display
+                    const mappedCategory = template.categoryId 
+                      ? categories.find(c => c.id === template.categoryId)
+                      : null;
+                    return (
+                      <button
+                        key={template.id}
+                        type="button"
+                        onClick={() => handleQuickAction({
+                          icon: IconComponent,
+                          label: template.label,
+                          title: template.titleTemplate,
+                          description: template.descriptionTemplate,
+                          category: template.category,
+                          priority: template.priority as TicketPriority,
+                          categoryId: template.categoryId
+                        })}
+                        className="flex flex-col p-3 bg-white border border-blue-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors text-left group"
+                        title={mappedCategory ? `Will auto-select: ${mappedCategory.name}` : undefined}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <IconComponent className="h-5 w-5 text-blue-600" />
+                          <span className="text-sm font-medium text-gray-900">{template.label}</span>
+                        </div>
+                        {mappedCategory && (
+                          <span className="mt-1.5 text-xs text-gray-500 truncate">
+                            → {mappedCategory.name}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Loading state for templates */}
+            {templatesLoading && (
+              <div className="bg-blue-50 rounded-lg p-sm">
+                <div className="animate-pulse flex space-x-4">
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-blue-200 rounded w-1/4"></div>
+                    <div className="grid grid-cols-4 gap-3">
+                      {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="h-12 bg-blue-200 rounded"></div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Basic Information */}
             <div className="bg-gray-50 rounded-lg p-sm space-y-sm">
@@ -834,7 +853,7 @@ const NewTicketPage: React.FC = () => {
                       <option>Loading...</option>
                     ) : (
                       priorities.map((priority) => (
-                        <option key={priority.id} value={priority.level}>
+                        <option key={priority.id} value={mapPriorityNameToEnum(priority.name)}>
                           {priority.name}
                         </option>
                       ))

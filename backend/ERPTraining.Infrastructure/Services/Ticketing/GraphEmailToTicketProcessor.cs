@@ -208,6 +208,20 @@ public class GraphEmailToTicketProcessor : IEmailToTicketProcessor
                                  $"--- Message Content ---\n" +
                                  $"{cleanBody}";
 
+        // Auto-assign SLA policy based on ticket priority
+        Guid? slaPolicyId = null;
+        var matchingSlaPolicy = await dbContext.Set<SlaPolicy>()
+            .Where(p => p.Priority == priority && p.IsActive && !p.IsDeleted)
+            .OrderBy(p => p.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+        
+        if (matchingSlaPolicy != null)
+        {
+            slaPolicyId = matchingSlaPolicy.Id;
+            _logger.LogInformation("Auto-assigned SLA policy '{PolicyName}' to email ticket based on priority {Priority}",
+                matchingSlaPolicy.Name, priority);
+        }
+
         var ticket = new Ticket
         {
             PublicId = ticketNumber,
@@ -220,6 +234,7 @@ public class GraphEmailToTicketProcessor : IEmailToTicketProcessor
             Priority = (ERPTraining.Core.Entities.Ticketing.TicketPriority)priority,
             Status = 1, // New status ID
             Source = TicketSource.Email,
+            SlaPolicyId = slaPolicyId,
             CreatedAt = email.ReceivedDate,
             UpdatedAt = DateTime.UtcNow
         };

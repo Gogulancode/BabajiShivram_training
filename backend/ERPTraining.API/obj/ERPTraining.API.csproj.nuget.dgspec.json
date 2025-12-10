@@ -29,8 +29,8 @@
               "D:\\BabajiShivram_training\\backend\\ERPTraining.Core\\ERPTraining.Core.csproj": {
                 "projectPath": "D:\\BabajiShivram_training\\backend\\ERPTraining.Core\\ERPTraining.Core.csproj"
               },
-              "D:\\BabajiShivram_training\\backend\\ERPTraining.Infrastructure\\ERPTraining.Infrastructure.csproj": {
-                "projectPath": "D:\\BabajiShivram_training\\backend\\ERPTraining.Infrastructure\\ERPTraining.Infrastructure.csproj"
+              "d:\\BabajiShivram_training\\backend\\ERPTraining.Infrastructure\\ERPTraining.Infrastructure.csproj": {
+                "projectPath": "d:\\BabajiShivram_training\\backend\\ERPTraining.Infrastructure\\ERPTraining.Infrastructure.csproj"
               }
             }
           }
@@ -216,14 +216,14 @@
         }
       }
     },
-    "D:\\BabajiShivram_training\\backend\\ERPTraining.Infrastructure\\ERPTraining.Infrastructure.csproj": {
+    "d:\\BabajiShivram_training\\backend\\ERPTraining.Infrastructure\\ERPTraining.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\BabajiShivram_training\\backend\\ERPTraining.Infrastructure\\ERPTraining.Infrastructure.csproj",
+        "projectUniqueName": "d:\\BabajiShivram_training\\backend\\ERPTraining.Infrastructure\\ERPTraining.Infrastructure.csproj",
         "projectName": "ERPTraining.Infrastructure",
-        "projectPath": "D:\\BabajiShivram_training\\backend\\ERPTraining.Infrastructure\\ERPTraining.Infrastructure.csproj",
+        "projectPath": "d:\\BabajiShivram_training\\backend\\ERPTraining.Infrastructure\\ERPTraining.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\fresh\\.nuget\\packages\\",
-        "outputPath": "D:\\BabajiShivram_training\\backend\\ERPTraining.Infrastructure\\obj\\",
+        "outputPath": "d:\\BabajiShivram_training\\backend\\ERPTraining.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\fresh\\AppData\\Roaming\\NuGet\\NuGet.Config"

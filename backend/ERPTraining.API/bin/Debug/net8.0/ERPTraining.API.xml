@@ -188,6 +188,11 @@
             </summary>
             <returns>Test response</returns>
         </member>
+        <member name="M:ERPTraining.API.Controllers.UsersController.SearchUsers(System.String,System.Int32)">
+            <summary>
+            Search users for autocomplete - returns minimal user info for selection
+            </summary>
+        </member>
         <member name="M:ERPTraining.API.Controllers.UsersController.GetUsers(System.Int32,System.Int32,System.String,System.String,System.String,System.String)">
             <summary>
             Get all users with pagination support
@@ -506,6 +511,47 @@
         <member name="M:ERPTraining.API.Controllers.Ticketing.TicketingAclController.GetRoleStatus">
             <summary>
             Get user's role status in ticketing system
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.Ticketing.TicketSettingsController.TriggerEmailProcessing(System.Threading.CancellationToken)">
+            <summary>
+            Manually trigger email processing for debugging purposes
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.Ticketing.TicketSettingsController.GetQuickTemplates(System.Boolean)">
+            <summary>
+            Get all quick templates
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.Ticketing.TicketSettingsController.GetQuickTemplate(System.Int32)">
+            <summary>
+            Get a single quick template by ID
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.Ticketing.TicketSettingsController.CreateQuickTemplate(ERPTraining.API.Controllers.Ticketing.CreateQuickTemplateRequest,System.Threading.CancellationToken)">
+            <summary>
+            Create a new quick template
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.Ticketing.TicketSettingsController.UpdateQuickTemplate(System.Int32,ERPTraining.API.Controllers.Ticketing.UpdateQuickTemplateRequest,System.Threading.CancellationToken)">
+            <summary>
+            Update an existing quick template
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.Ticketing.TicketSettingsController.DeleteQuickTemplate(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Delete a quick template (soft delete)
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.Ticketing.TicketSettingsController.ReorderQuickTemplates(System.Collections.Generic.List{ERPTraining.API.Controllers.Ticketing.ReorderQuickTemplateRequest},System.Threading.CancellationToken)">
+            <summary>
+            Reorder quick templates
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.Ticketing.TicketsV2Controller.DetermineSubcategoryFromEmailAsync(System.String,System.String,Microsoft.Data.SqlClient.SqlConnection)">
+            <summary>
+            Determines subcategory based on keywords in email subject and body.
+            Returns null if no matching keywords are found (subcategory should be "Select" option).
             </summary>
         </member>
         <member name="M:ERPTraining.API.Controllers.Ticketing.TicketTagController.GetAll(System.Boolean)">
@@ -1009,6 +1055,28 @@
         <member name="M:ERPTraining.API.Controllers.UserSyncController.PreviewUsers">
             <summary>
             Get preview of users from ERP system
+            </summary>
+        </member>
+        <member name="T:ERPTraining.API.Middleware.InputSanitizationMiddleware">
+            <summary>
+            Enterprise-grade input sanitization middleware.
+            Validates and sanitizes incoming requests without changing application behavior.
+            </summary>
+        </member>
+        <member name="T:ERPTraining.API.Middleware.InputSanitizationMiddlewareExtensions">
+            <summary>
+            Extension method to register the input sanitization middleware.
+            </summary>
+        </member>
+        <member name="T:ERPTraining.API.Middleware.RequestLoggingMiddleware">
+            <summary>
+            Enterprise-grade request logging middleware.
+            Logs request details for monitoring and debugging without changing application behavior.
+            </summary>
+        </member>
+        <member name="T:ERPTraining.API.Middleware.RequestLoggingMiddlewareExtensions">
+            <summary>
+            Extension method to register the request logging middleware.
             </summary>
         </member>
         <member name="M:ERPTraining.APIng.EmailConfigurationController_Disabled.GetEmailConfiguration">

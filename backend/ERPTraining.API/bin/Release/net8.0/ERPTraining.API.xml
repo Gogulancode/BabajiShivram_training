@@ -508,6 +508,17 @@
             Get user's role status in ticketing system
             </summary>
         </member>
+        <member name="M:ERPTraining.API.Controllers.Ticketing.TicketSettingsController.TriggerEmailProcessing(System.Threading.CancellationToken)">
+            <summary>
+            Manually trigger email processing for debugging purposes
+            </summary>
+        </member>
+        <member name="M:ERPTraining.API.Controllers.Ticketing.TicketsV2Controller.DetermineSubcategoryFromEmailAsync(System.String,System.String,Microsoft.Data.SqlClient.SqlConnection)">
+            <summary>
+            Determines subcategory based on keywords in email subject and body.
+            Returns null if no matching keywords are found (subcategory should be "Select" option).
+            </summary>
+        </member>
         <member name="M:ERPTraining.API.Controllers.Ticketing.TicketTagController.GetAll(System.Boolean)">
             <summary>
             Get all ticket tags (with optional inactive tags)
@@ -1009,6 +1020,28 @@
         <member name="M:ERPTraining.API.Controllers.UserSyncController.PreviewUsers">
             <summary>
             Get preview of users from ERP system
+            </summary>
+        </member>
+        <member name="T:ERPTraining.API.Middleware.InputSanitizationMiddleware">
+            <summary>
+            Enterprise-grade input sanitization middleware.
+            Validates and sanitizes incoming requests without changing application behavior.
+            </summary>
+        </member>
+        <member name="T:ERPTraining.API.Middleware.InputSanitizationMiddlewareExtensions">
+            <summary>
+            Extension method to register the input sanitization middleware.
+            </summary>
+        </member>
+        <member name="T:ERPTraining.API.Middleware.RequestLoggingMiddleware">
+            <summary>
+            Enterprise-grade request logging middleware.
+            Logs request details for monitoring and debugging without changing application behavior.
+            </summary>
+        </member>
+        <member name="T:ERPTraining.API.Middleware.RequestLoggingMiddlewareExtensions">
+            <summary>
+            Extension method to register the request logging middleware.
             </summary>
         </member>
         <member name="M:ERPTraining.APIng.EmailConfigurationController_Disabled.GetEmailConfiguration">

@@ -150,8 +150,16 @@ const MyTicketsPage: React.FC = () => {
     if (ticket.priorityName) return ticket.priorityName;
     if (typeof ticket.priority === 'object' && ticket.priority?.name) return ticket.priority.name;
     
-    // Get the priority value - could be enum (0-3) or database ID (1-4)
-    const priorityValue = typeof ticket.priority === 'number' ? Number(ticket.priority) : undefined;
+    // Get the priority value - this is the enum value (0-3) from backend
+    // Handle both number and potential string values
+    let priorityValue: number | undefined;
+    if (typeof ticket.priority === 'number') {
+      priorityValue = ticket.priority;
+    } else if (typeof ticket.priority === 'string' && ticket.priority !== '') {
+      priorityValue = parseInt(ticket.priority, 10);
+      if (isNaN(priorityValue)) priorityValue = undefined;
+    }
+    
     const priorityId = ticket.priorityId ?? (typeof ticket.priority === 'object' ? ticket.priority?.id : undefined);
     
     // If we have a priorityId that's >= 1, try to look it up directly (database ID)
@@ -160,23 +168,23 @@ const MyTicketsPage: React.FC = () => {
       if (priority?.name) return priority.name;
     }
     
-    // Map backend enum values (0-3) to database IDs (1-4): enum + 1 = database ID
-    // Enum: Low=0, Medium=1, High=2, Critical=3
-    // DB:   Low=1, Medium=2, High=3, Critical=4
-    if (priorityValue != null && priorityValue >= 0 && priorityValue <= 3 && priorities?.length) {
-      const dbPriorityId = priorityValue + 1; // Convert enum to database ID
-      const priority = priorities.find((pri) => pri.id === dbPriorityId);
-      if (priority?.name) return priority.name;
+    // Map backend enum values (0-3) to priority names using hardcoded mapping
+    // The backend stores: Low=0, Medium=1, High=2, Critical=3
+    const enumNameMap: Record<number, string> = {
+      0: 'Low',
+      1: 'Medium',
+      2: 'High',
+      3: 'Critical'
+    };
+    
+    // If we have a valid priority value, use the hardcoded map directly
+    // This ensures correct display even before settings API loads
+    if (priorityValue !== undefined && priorityValue >= 0 && priorityValue <= 3) {
+      return enumNameMap[priorityValue];
     }
     
-    // Final fallback: hardcoded enum mapping
-    switch (priorityValue) {
-      case 0: return 'Low';
-      case 1: return 'Medium'; 
-      case 2: return 'High';
-      case 3: return 'Critical';
-      default: return 'Low';
-    }
+    // If priority value is still undefined, return empty or loading indicator
+    return '';
   }, [priorities]);
 
   const getStatusName = useCallback((ticket: TicketListItem) => {
@@ -212,13 +220,24 @@ const MyTicketsPage: React.FC = () => {
     if (ticket.assignedAgent?.email) return ticket.assignedAgent.email;
     if (ticket.agentName) return ticket.agentName;
     
-    // If no user is assigned, return unassigned
-    if (!ticket.assignedToUserId && !ticket.assignedAgentId) return 'Unassigned';
+    // Check for empty/null/undefined assignedToUserId - must handle all falsy cases
+    const hasAssignedUserId = ticket.assignedToUserId != null && 
+                               ticket.assignedToUserId !== '' && 
+                               ticket.assignedToUserId !== 'null' &&
+                               ticket.assignedToUserId !== 'undefined';
+    const hasAssignedAgentId = ticket.assignedAgentId != null && 
+                                ticket.assignedAgentId !== '' && 
+                                ticket.assignedAgentId !== 0;
     
-    // Look up agent by userId
-    const agent = agents?.find((a) => 
-      (ticket.assignedToUserId && a.userId === toStringValue(ticket.assignedToUserId)) || 
-      (ticket.assignedAgentId != null && a.id === toNumericValue(ticket.assignedAgentId) ) ||
+    // If no user is assigned, return unassigned
+    if (!hasAssignedUserId && !hasAssignedAgentId) return 'Unassigned';
+    
+    // Look up agent by userId - only if we have agents loaded
+    if (!agents?.length) return 'Loading...';
+    
+    const agent = agents.find((a) => 
+      (hasAssignedUserId && a.userId === toStringValue(ticket.assignedToUserId)) || 
+      (hasAssignedAgentId && a.id === toNumericValue(ticket.assignedAgentId)) ||
       (ticket.assignedAgent?.email && a.email === ticket.assignedAgent.email)
     );
     return agent?.name || agent?.email || 'Unassigned';

@@ -6372,8 +6372,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\BabajiShivram_training\\backend\\ERPTraining.Core\\ERPTraining.Core.csproj": {
-              "projectPath": "D:\\BabajiShivram_training\\backend\\ERPTraining.Core\\ERPTraining.Core.csproj"
+            "d:\\BabajiShivram_training\\backend\\ERPTraining.Core\\ERPTraining.Core.csproj": {
+              "projectPath": "d:\\BabajiShivram_training\\backend\\ERPTraining.Core\\ERPTraining.Core.csproj"
             }
           }
         }

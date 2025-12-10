@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Briefcase, Shield, Edit2, Save, X } from 'lucide-react';
 import { LoadingSpinner } from '../../components';
+import { API_CONFIG } from '@/config/api';
 
 const Profile: React.FC = () => {
   const [user, setUser] = useState<any>(null);
@@ -10,7 +11,7 @@ const Profile: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5015/api';
+  const API_BASE = API_CONFIG.BASE_URL;
 
   useEffect(() => {
     async function fetchUser() {

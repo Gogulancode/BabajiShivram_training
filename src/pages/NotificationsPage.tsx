@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Check, CheckCheck, Trash2, AlertCircle, Info, CheckCircle, AlertTriangle } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { API_CONFIG } from '@/config/api';
 
 interface Notification {
   id: number;
@@ -30,7 +31,7 @@ const NotificationsPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5015/api';
+  const API_BASE = API_CONFIG.BASE_URL;
 
   const fetchNotifications = async () => {
     try {

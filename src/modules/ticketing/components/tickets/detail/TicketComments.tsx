@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { MessageCircle, Send, Lock, User, Clock, StickyNote, Reply, Forward, Mail, Paperclip, Download, X, FileText } from 'lucide-react';
 import { commentsApi, type Comment, type AddCommentWithAttachmentsRequest } from '../../../../../shared/services/api/commentsApi';
 import { ticketEmailUtility } from '../../../../../shared/services/ticketEmailUtility';
+import { API_CONFIG } from '@/config/api';
 
 interface TicketCommentsProps {
   ticketId: string;
@@ -172,7 +173,7 @@ const TicketComments: React.FC<TicketCommentsProps> = ({ ticketId, ticketTitle, 
 
     setIsForwarding(true);
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5015/api';
+      const baseUrl = API_CONFIG.BASE_URL;
       const token = localStorage.getItem('token');
       
       // Use FormData to support file attachments
@@ -464,7 +465,7 @@ const TicketComments: React.FC<TicketCommentsProps> = ({ ticketId, ticketTitle, 
                           </div>
                         </div>
                         <a
-                          href={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5015/api'}/tickets-v2/attachments/${attachment.id}/download`}
+                          href={`${API_CONFIG.BASE_URL}/tickets-v2/attachments/${attachment.id}/download`}
                           download={attachment.fileName}
                           className="flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded transition-colors"
                           title="Download attachment"

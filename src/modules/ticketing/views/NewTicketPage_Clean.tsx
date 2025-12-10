@@ -31,6 +31,26 @@ const mapCategoryToEnum = (categoryId: string): TicketCategory => {
   }
 };
 
+// Helper function to map priority name to backend enum value
+const mapPriorityNameToEnum = (priorityName: string): TicketPriority => {
+  const normalizedName = priorityName.toLowerCase().trim();
+  switch (normalizedName) {
+    case 'low':
+    case 'very low':
+      return TicketPriority.Low;
+    case 'medium':
+    case 'normal':
+      return TicketPriority.Medium;
+    case 'high':
+      return TicketPriority.High;
+    case 'critical':
+    case 'urgent':
+      return TicketPriority.Critical;
+    default:
+      return TicketPriority.Medium;
+  }
+};
+
 const NewTicketPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -320,15 +340,15 @@ const NewTicketPage: React.FC = () => {
                       <option>Loading priorities...</option>
                     ) : (
                       priorities.map((priority) => (
-                        <option key={priority.id} value={priority.level}>
+                        <option key={priority.id} value={mapPriorityNameToEnum(priority.name)}>
                           {priority.name}
                         </option>
                       ))
                     )}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
-                    Current priority: <span style={{ color: priorities.find(p => p.level === formData.priority)?.color || '#6b7280' }}>
-                      {priorities.find(p => p.level === formData.priority)?.name || 'Medium'}
+                    Current priority: <span style={{ color: priorities.find(p => mapPriorityNameToEnum(p.name) === formData.priority)?.color || '#6b7280' }}>
+                      {priorities.find(p => mapPriorityNameToEnum(p.name) === formData.priority)?.name || 'Medium'}
                     </span>
                   </p>
                 </div>

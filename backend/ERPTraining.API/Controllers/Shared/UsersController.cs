@@ -33,6 +33,52 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
+    /// Search users for autocomplete - returns minimal user info for selection
+    /// </summary>
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<object>>> SearchUsers([FromQuery] string q = "", [FromQuery] int limit = 20)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
+            {
+                return Ok(Array.Empty<object>());
+            }
+
+            var searchLower = q.ToLower();
+
+            var users = await _context.Users
+                .Where(u => u.IsActive)
+                .Where(u => 
+                    (u.FirstName != null && u.FirstName.ToLower().Contains(searchLower)) ||
+                    (u.LastName != null && u.LastName.ToLower().Contains(searchLower)) ||
+                    (u.Email != null && u.Email.ToLower().Contains(searchLower)) ||
+                    (u.UserName != null && u.UserName.ToLower().Contains(searchLower)))
+                .OrderBy(u => u.FirstName)
+                .ThenBy(u => u.LastName)
+                .Take(limit)
+                .Select(u => new
+                {
+                    id = u.Id,
+                    name = (u.FirstName ?? "") + " " + (u.LastName ?? ""),
+                    firstName = u.FirstName ?? "",
+                    lastName = u.LastName ?? "",
+                    email = u.Email ?? "",
+                    department = u.Department ?? "",
+                    position = u.Position ?? ""
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching users");
+            return StatusCode(500, new { message = "Error searching users", error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Get all users with pagination support
     /// </summary>
     [HttpGet]

@@ -180,6 +180,9 @@ builder.Services.AddScoped<ERPTraining.Core.Interfaces.Ticketing.ITicketGroupSer
 builder.Services.AddScoped<ERPTraining.Core.Interfaces.Ticketing.ISlaService, ERPTraining.Infrastructure.Services.Ticketing.SimpleSlaService>();
 builder.Services.AddScoped<ERPTraining.Core.Interfaces.Ticketing.INotificationService, ERPTraining.Infrastructure.Services.Ticketing.NotificationService>();
 
+// SLA Monitoring Background Service - checks for SLA breaches and triggers escalation emails
+builder.Services.AddHostedService<ERPTraining.Infrastructure.Services.Ticketing.SlaMonitoringBackgroundService>();
+
 // Custom Fields Service
 builder.Services.AddScoped<ERPTraining.Infrastructure.Services.Ticketing.ICustomFieldsService, ERPTraining.Infrastructure.Services.Ticketing.CustomFieldsService>();
 
